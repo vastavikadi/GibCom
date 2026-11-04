@@ -9,6 +9,7 @@ import { eq } from 'drizzle-orm';
 import { GET as getConnectors, POST as saveConnector } from '@/app/api/connectors/route';
 import { POST as testConnector } from '@/app/api/connectors/test/route';
 import { POST as syncConnector } from '@/app/api/connectors/sync/route';
+import { decryptSecret, isEncrypted } from '@/lib/security/encryption';
 
 const ORG_ID = '11111111-1111-1111-1111-111111111111';
 
@@ -136,7 +137,8 @@ describe('Production Third-Party Connectors (Integration)', () => {
       where: eq(organizations.id, ORG_ID),
     });
     const settings = org?.settings as any;
-    expect(settings.connectors.github.token).toBe('ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890');
+    expect(isEncrypted(settings.connectors.github.token)).toBe(true);
+    expect(decryptSecret(settings.connectors.github.token)).toBe('ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890');
     expect(settings.connectors.github.repo).toBe('facebook/flow');
   });
 

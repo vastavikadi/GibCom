@@ -218,7 +218,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   };
 
-  if (pathname.startsWith('/auth') || !session) return <>{children}</>;
+  if (pathname === '/' || pathname.startsWith('/auth') || !session) return <>{children}</>;
 
   const initials =
     session.user?.name
