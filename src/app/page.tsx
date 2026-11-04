@@ -14,9 +14,9 @@ import { LandingFAQ } from '@/components/landing/faq';
 import { LandingFooter } from '@/components/landing/footer';
 
 export const metadata: Metadata = {
-  title: 'GibCom — Ship faster than your standup',
+  title: 'GibCom — Organizational Intelligence',
   description:
-    'Anchor every pull request, Slack debate, Jira ticket, and RFC across your whole organization before your team even starts their daily sync. Powered by Meta AI Muse-Spark & pgvector.',
+    'The intelligence layer of your organization. An AI-native organizational memory and intelligence platform. Powered by Meta AI Muse-Spark.',
 };
 
 export default function LandingPage() {
