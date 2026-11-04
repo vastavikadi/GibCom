@@ -70,3 +70,38 @@
 @media(max-width:800px){.auth-layout{grid-template-columns:1fr}.auth-story{display:none}.auth-main{min-height:100dvh;padding:32px 25px}.auth-mobile-brand{display:flex;align-items:center;gap:10px;font-size:15px;letter-spacing:-.035em;color:#71895a;margin:10px 0 20px}.auth-form{max-width:390px}.auth-form h2{font-size:42px}.auth-form-footer{margin-top:15px}.upload-layout{grid-template-columns:1fr}.upload-privacy{display:grid;grid-template-columns:20px 1fr;gap:8px 12px}.upload-privacy h3{margin:0}.upload-privacy p{grid-column:2;margin:0}.upload-privacy select{grid-column:2;margin-top:5px}.upload-zone{padding:25px}.upload-zone h2{font-size:25px}}
 @media(max-width:600px){.admin-tab{padding:13px 10px;font-size:10px;gap:6px}.admin-tab svg{width:12px}.source-table-head{display:none}.source-table-row{grid-template-columns:minmax(0,1fr) 80px 12px;padding:16px 18px;gap:10px}.source-visibility{display:none}.source-status{font-size:8px}.source-table-row h3{font-size:10px}.source-table-row p{font-size:8px}.source-file-icon{margin-right:9px;width:24px}.memory-review-row{padding:17px;gap:10px}.memory-review-row .soft-icon{display:none}.memory-review-row>.pill{font-size:8px}.settings-grid{grid-template-columns:1fr}.upload-zone-icon{width:42px;height:45px}.upload-zone{gap:13px;padding:23px}.upload-zone h2{font-size:23px}.upload-zone>div:nth-child(2){flex:1}.upload-zone p{font-size:10px}.upload-zone>button{margin-left:55px}.panel-heading:has(input){align-items:flex-start;flex-direction:column}.panel-heading:has(input)>div:last-child{width:100%;max-width:none}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Resizable Panels & Finished Left/Right Panel Enhancements */
+.sidebar-resizer{position:absolute;top:0;right:-4px;width:8px;height:100%;cursor:col-resize;z-index:60;transition:background .2s;background:transparent}
+.sidebar-resizer:hover,.sidebar-resizer.is-dragging{background:#7c956460}
+.app-sidebar{position:relative;transition:width .15s cubic-bezier(.4,0,.2,1)}
+.app-sidebar.is-resizing{transition:none;user-select:none}
+.app-sidebar.is-compact{width:68px!important}
+.app-sidebar.is-compact .brand-name,.app-sidebar.is-compact .brand-caption,.app-sidebar.is-compact .sidebar-caption,.app-sidebar.is-compact .sidebar-note,.app-sidebar.is-compact .sidebar-account div:not(.sidebar-avatar),.app-sidebar.is-compact .nav-link span,.app-sidebar.is-compact .nav-badge,.app-sidebar.is-compact .workspace-switch div:not(.workspace-avatar),.app-sidebar.is-compact .workspace-switch svg{display:none!important}
+.app-sidebar.is-compact .sidebar-brand{padding:25px 16px;justify-content:center}
+.app-sidebar.is-compact .workspace-switch{margin:0 10px 20px;padding:8px;justify-content:center}
+.app-sidebar.is-compact .sidebar-nav{padding:0 8px;gap:8px}
+.app-sidebar.is-compact .nav-link{padding:12px;justify-content:center}
+.app-sidebar.is-compact .nav-link.active:before{left:-8px}
+.app-sidebar.is-compact .sidebar-account{padding:15px 10px;justify-content:center}
+.app-sidebar.is-compact .sidebar-account button{display:none}
+.sidebar-toggle-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;color:#7e8e78;border:1px solid #364234;background:#242e27;margin-left:auto;transition:all .2s;cursor:pointer}
+.sidebar-toggle-btn:hover{color:#e8f0dc;background:#324032;border-color:#4a5c48}
+.nav-badge{margin-left:auto;font-size:9px;padding:2px 6px;border-radius:10px;background:#364534;color:#bdd0a4;font-weight:500;line-height:1.2}
+.workspace-popover{position:absolute;top:95px;left:18px;width:245px;background:#1e2722;border:1px solid #3a473a;border-radius:11px;box-shadow:0 15px 35px #00000045;padding:12px;z-index:90;animation:arrive .15s ease-out}
+.workspace-popover-item{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border-radius:7px;font-size:11px;color:#cbd6be;text-align:left;transition:background .2s}
+.workspace-popover-item:hover{background:#2a362e;color:#e8f2db}
+
+/* Resizable Right Inspector Panel */
+.adjustable-right-panel{position:relative;background:#fff;border-left:1px solid #e1e6d7;display:flex;flex-direction:column;height:100%;z-index:40;box-shadow:-5px 0 25px #15251710;transition:width .15s cubic-bezier(.4,0,.2,1)}
+.adjustable-right-panel.is-resizing{transition:none;user-select:none}
+.right-panel-resizer{position:absolute;top:0;left:-4px;width:8px;height:100%;cursor:col-resize;z-index:50;transition:background .2s;background:transparent}
+.right-panel-resizer:hover,.right-panel-resizer.is-dragging{background:#7c956460}
+.panel-drag-affordance{position:absolute;top:50%;left:2px;transform:translateY(-50%);width:3px;height:24px;border-radius:2px;background:#96aa8366}
+
+/* Insight Assignees & Collaborators */
+.assignee-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:14px;background:#eef4e6;border:1px solid #dce8ce;font-size:9px;color:#5a7646;font-weight:500}
+.assignee-avatar{width:18px;height:18px;border-radius:50%;background:#506d3d;color:#f0f6e8;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600}
+.insight-team-modal{width:680px;max-width:100%;background:#fff;border-radius:15px;overflow:hidden}
+.member-row{display:flex;align-items:center;gap:13px;padding:12px 16px;border-radius:9px;border:1px solid #e8ede0;background:#fafcf7;transition:background .2s}
+.member-row:hover{background:#f1f6ea}

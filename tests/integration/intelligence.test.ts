@@ -48,3 +48,4 @@ describe('Intelligence Engine & Query Pipeline (Integration)', () => {
     expect(retrievalResult.chunks.length).toBeGreaterThan(0);
   });
 });
+

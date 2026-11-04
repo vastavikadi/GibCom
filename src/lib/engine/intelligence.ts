@@ -345,6 +345,47 @@ Acme Corp lost the **ABC Technologies** deal, representing approximately **\$450
       assumptions.push('ABC Technologies may re-evaluate Acme Corp upon their contract renewal with CompetitorX');
       followUps.push('What is our current sales strategy for re-engaging ABC Technologies in 2027?');
       followUps.push('Which other prospective deals currently have custom API Gateway requirements?');
+    } else if (qLower.includes('globalretail') || (qLower.includes('contract') && qLower.includes('retail'))) {
+      answer = `### Account History & Status: GlobalRetail Inc Contract
+
+**Overview & Account Value:**
+**GlobalRetail Inc** is an active enterprise customer (large retail chain with 200+ physical stores). Initial contract value was **\$320,000/year**, which expanded to **\$368,000/year (+15%)** upon contract renewal in July 2026.
+
+**Key Chronology & Milestones:**
+1. **Contract Execution (September 2025):** Signed initial payment processing agreement; expanded in Dec 2025 to include fraud detection add-on.
+2. **Complex Onboarding (Fall 2025):** Onboarding took 9 weeks (exceeding standard 6-week SLA) due to complex data migration from their legacy POS system. James Wright and David Kim provided critical hands-on support.
+3. **Operational Stability (March 2026):** Latency spikes during the holiday peak were directly resolved by Sarah Chen through database query optimization.
+4. **Renewal with Expansion (July 2026):** Successfully renewed with a 15% price increase with the commitment to deliver the **Merchant Dashboard v2** (real-time analytics).
+
+**Known Risks & Strategic Actions:**
+- GlobalRetail is currently exploring competitor offerings for mobile in-store payments.
+- Jennifer Walsh (VP Technology) is evaluating a corporate vendor consolidation strategy.`;
+
+      facts.push('GlobalRetail Inc initial contract signed September 2025 at $320,000 ACV');
+      facts.push('Onboarding took 9 weeks instead of 6 due to legacy POS data migration');
+      facts.push('Contract renewed in July 2026 with 15% expansion ($368,000 ACV)');
+      facts.push('Renewal depends on delivering Merchant Dashboard v2 real-time analytics in Q3 2026');
+      assumptions.push('GlobalRetail may evaluate competitors if Merchant Dashboard v2 is delayed past Q3 2026');
+      followUps.push('What is the current delivery timeline for Merchant Dashboard v2?');
+      followUps.push('Who is the executive contact at GlobalRetail managing the mobile payments evaluation?');
+    } else if (qLower.includes('decision') || qLower.includes('architecture') || qLower.includes('postgres') || qLower.includes('mongo')) {
+      answer = `### Key Architectural Decisions & Evolution
+
+**PostgreSQL over MongoDB for Project Atlas:**
+- **Decision Maker:** Sarah Chen (CTO) on January 15, 2026.
+- **Alternatives Considered:** MongoDB (rejected due to weaker ACID guarantees for payment transactions) and CockroachDB (rejected due to higher operational complexity).
+- **Core Rationale:** Financial payment processing strictly requires ACID transaction guarantees, which PostgreSQL provides natively. Additionally, the team (David Kim and Sarah Chen) has proven operational expertise, and PostgreSQL's JSONB and pgvector extensions provide flexibility for AI workloads.
+- **Trade-off:** Accepted higher sharding complexity for horizontal scaling in exchange for bulletproof data consistency.
+
+**API Gateway Modernization:**
+- Built to unify external APIs with rate limiting and completed in June 2026 to add real-time webhooks.`;
+
+      facts.push('Sarah Chen approved PostgreSQL over MongoDB and CockroachDB for Project Atlas on Jan 15, 2026');
+      facts.push('ACID compliance for payment integrity was the decisive criteria');
+      facts.push('David Kim and Sarah Chen lead database architecture and schema governance');
+      assumptions.push('Horizontal sharding will be implemented when transactional throughput doubles');
+      followUps.push('What is the current timeline and phase of Project Atlas?');
+      followUps.push('Who else on the engineering team has PostgreSQL optimization expertise?');
     } else {
       // General heuristic context reconstruction
       const memSummaries = evidence.memories.slice(0, 5).map((m) => `• **${m.title}**: ${m.description}`).join('\n\n');
@@ -436,6 +477,30 @@ Acme Corp lost the **ABC Technologies** deal, representing approximately **\$450
       facts.push('GlobalRetail Inc onboarding took 9 weeks due to complex legacy data');
       followUps.push('What recommendations exist to shorten Stage 4 data migration?');
       followUps.push('How does GlobalRetail Inc feel about their ongoing onboarding support?');
+    } else if (qLower.includes('risk') || qLower.includes('concentration') || qLower.includes('dependency')) {
+      answer = `### Knowledge Concentration & Organizational Risk Analysis
+
+**Critical Findings:**
+1. **Payment Reconciliation Engine (Critical Severity):**
+   - **Owner:** David Kim (Senior Backend Engineer).
+   - **Risk Factor:** David designed and authored the legacy billing and reconciliation pipeline in 2024 and is its sole maintainer. If David were unavailable, no other engineer could maintain or debug this core revenue pipeline (Bus Factor = 1).
+2. **Kubernetes & Production Infrastructure (Moderate Severity):**
+   - **Owner:** Alex Novak (DevOps Engineer).
+   - **Risk Factor:** Alex holds primary operational knowledge for Kubernetes clusters and monitoring. Marcus Johnson has limited familiarity but lacks hands-on operational practice.
+3. **Legacy Billing Architectural Rationale (Moderate Severity):**
+   - **Owner:** Sarah Chen (CTO).
+   - **Risk Factor:** Sarah is the sole person retaining context on historical billing API constraints and trade-offs made pre-2025.
+
+**Recommended Mitigations:**
+- Commission comprehensive system documentation and architecture diagrams for the payment reconciliation pipeline.
+- Pair David Kim with another backend engineer for a 4-week cross-training sprint.
+- Schedule recurring disaster recovery drills for Kubernetes infrastructure with Marcus and DevOps.`;
+
+      facts.push('David Kim is the sole maintainer of the legacy payment reconciliation system (bus factor = 1)');
+      facts.push('Alex Novak holds concentrated operational knowledge for Kubernetes clusters and incident response');
+      facts.push('Sarah Chen retains exclusive historical context on legacy billing decisions');
+      followUps.push('Would you like to draft a knowledge handover action proposal for David Kim?');
+      followUps.push('What is the estimated engineering time required for cross-training?');
     } else {
       // General synthesis from evidence
       const topMemories = filteredMemories.slice(0, 4);

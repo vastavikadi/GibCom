@@ -80,3 +80,4 @@ describe('Contracts & Domain Logic', () => {
     expect(invalid.success).toBe(false);
   });
 });
+

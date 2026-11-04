@@ -63,6 +63,31 @@ export default function ExploreBrainPage() {
   const [loading, setLoading] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Adjustable panel sizes
+  const [leftWidth, setLeftWidth] = useState<number>(310);
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState<boolean>(false);
+  const [isResizingLeft, setIsResizingLeft] = useState<boolean>(false);
+
+  const startResizingLeft = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizingLeft(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isResizingLeft) return;
+    const onMouseMove = (e: MouseEvent) => {
+      const newWidth = Math.min(550, Math.max(200, e.clientX));
+      setLeftWidth(newWidth);
+    };
+    const onMouseUp = () => setIsResizingLeft(false);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [isResizingLeft]);
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
     if (status === 'authenticated') {
@@ -175,64 +200,109 @@ export default function ExploreBrainPage() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-full">
-      {/* Left panel: Entity list */}
-      <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r flex flex-col">
-        <div className="p-4 border-b space-y-3">
-          <div className="flex items-center gap-2">
-            <Compass className="h-5 w-5 text-primary" />
-            <h1 className="font-semibold">Explore Brain</h1>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search entities..."
-              className="pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-wrap gap-1">
-            <Badge
-              variant={filterType === 'all' ? 'default' : 'outline'}
-              className="cursor-pointer text-[10px]"
-              onClick={() => setFilterType('all')}
-            >
-              All ({entities.length})
-            </Badge>
-            {entityTypes.map((t) => (
-              <Badge
-                key={t}
-                variant={filterType === t ? 'default' : 'outline'}
-                className="cursor-pointer text-[10px]"
-                onClick={() => setFilterType(t)}
-              >
-                {t} ({entities.filter((e) => e.entityType === t).length})
-              </Badge>
-            ))}
-          </div>
-        </div>
-        <ScrollArea className="flex-1">
-          <div className="p-2 space-y-1">
-            {filteredEntities.map((e) => (
-              <button
-                key={e.id}
-                onClick={() => selectEntity(e)}
-                className={`w-full text-left p-2.5 rounded-md transition-colors text-sm ${selectedEntity?.id === e.id ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted'
-                  }`}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: typeColors[e.entityType] || '#888' }} />
-                  <span className="font-medium truncate">{e.name}</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{e.description || e.entityType}</p>
-              </button>
-            ))}
-            {filteredEntities.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground py-8">No entities found</p>
+    <div className="flex flex-col lg:flex-row h-full relative overflow-hidden">
+      {/* Left panel: Entity list (Adjustable width & collapsible) */}
+      <div
+        className={`border-b lg:border-b-0 lg:border-r flex flex-col relative transition-all ${
+          isResizingLeft ? 'select-none' : ''
+        }`}
+        style={{
+          width: isLeftCollapsed ? 54 : leftWidth,
+          minWidth: isLeftCollapsed ? 54 : 200,
+        }}
+      >
+        {/* Resize Handle */}
+        {!isLeftCollapsed && (
+          <div
+            onMouseDown={startResizingLeft}
+            className={`hidden lg:block absolute top-0 right-0 w-2 h-full cursor-col-resize hover:bg-[#86a666]/30 z-20 ${
+              isResizingLeft ? 'bg-[#86a666]/40' : ''
+            }`}
+            title="Drag to resize panel"
+          />
+        )}
+
+        <div className="p-3 border-b space-y-3">
+          <div className="flex items-center justify-between">
+            {!isLeftCollapsed && (
+              <div className="flex items-center gap-2">
+                <Compass className="h-5 w-5 text-primary" />
+                <h1 className="font-semibold text-sm">Explore Brain</h1>
+              </div>
             )}
+            <button
+              onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
+              className="p-1.5 rounded hover:bg-muted text-muted-foreground ml-auto"
+              title={isLeftCollapsed ? 'Expand entity list' : 'Compact entity list'}
+            >
+              {isLeftCollapsed ? <Compass className="h-4 w-4" /> : <span className="text-xs">⇥</span>}
+            </button>
           </div>
-        </ScrollArea>
+
+          {!isLeftCollapsed && (
+            <>
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search entities..."
+                  className="pl-9 h-9 text-xs"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-wrap gap-1">
+                <Badge
+                  variant={filterType === 'all' ? 'default' : 'outline'}
+                  className="cursor-pointer text-[10px]"
+                  onClick={() => setFilterType('all')}
+                >
+                  All ({entities.length})
+                </Badge>
+                {entityTypes.map((t) => (
+                  <Badge
+                    key={t}
+                    variant={filterType === t ? 'default' : 'outline'}
+                    className="cursor-pointer text-[10px]"
+                    onClick={() => setFilterType(t)}
+                  >
+                    {t} ({entities.filter((e) => e.entityType === t).length})
+                  </Badge>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+        {!isLeftCollapsed && (
+          <ScrollArea className="flex-1">
+            <div className="p-2 space-y-1">
+              {filteredEntities.map((e) => (
+                <button
+                  key={e.id}
+                  onClick={() => selectEntity(e)}
+                  className={`w-full text-left p-2.5 rounded-md transition-colors text-sm ${
+                    selectedEntity?.id === e.id
+                      ? 'bg-primary/10 border border-primary/30'
+                      : 'hover:bg-muted'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: typeColors[e.entityType] || '#888' }}
+                    />
+                    <span className="font-medium truncate">{e.name}</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                    {e.description || e.entityType}
+                  </p>
+                </button>
+              ))}
+              {filteredEntities.length === 0 && (
+                <p className="text-center text-sm text-muted-foreground py-8">No entities found</p>
+              )}
+            </div>
+          </ScrollArea>
+        )}
       </div>
 
       {/* Center: Graph */}

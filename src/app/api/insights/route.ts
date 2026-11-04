@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { memories, entities, relationships } from '@/lib/db/schema';
+import { memories, entities, relationships, organizations } from '@/lib/db/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 
 export async function GET() {
   try {
-    const { organizationId } = await requireAuth();
+    const { organizationId, membership } = await requireAuth();
+
+    // Fetch org settings for stored insight assignments
+    const org = await db.query.organizations.findFirst({
+      where: eq(organizations.id, organizationId),
+    });
+    const settings = (org?.settings || {}) as Record<string, unknown>;
+    const savedAssignments = (settings.insightAssignments || {}) as Record<
+      string,
+      Array<{ memberId: string; memberName: string; role?: string; note?: string; assignedAt: string }>
+    >;
 
     // Gather stats for insight generation
     const memsByType = await db
@@ -43,6 +53,7 @@ export async function GET() {
       recommendation: string;
       confidence: number;
       relatedEntities: string[];
+      assignees?: Array<{ memberId: string; memberName: string; role?: string; note?: string; assignedAt: string }>;
     }> = [];
 
     // Critical Single-Point Dependency Insight: David Kim
@@ -115,7 +126,21 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json({ success: true, data: insights });
+    // Attach saved assignees
+    for (const insight of insights) {
+      if (savedAssignments[insight.title]) {
+        insight.assignees = savedAssignments[insight.title];
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: insights,
+      meta: {
+        role: membership.role,
+        canManage: ['owner', 'admin', 'manager'].includes(membership.role),
+      },
+    });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Failed';
     return NextResponse.json({ success: false, error: msg }, { status: msg === 'Unauthorized' ? 401 : 500 });
