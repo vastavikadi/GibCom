@@ -261,13 +261,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           title="Drag to adjust sidebar width (Double click to collapse/expand)"
         />
 
-        {/* Brand & Compact Toggle */}
-        <div className="flex items-center justify-between sidebar-brand">
+        {/* Brand & Compact Toggle (Fixed Header) */}
+        <div className="flex items-center justify-between sidebar-brand flex-shrink-0">
           <Link href="/dashboard" className="flex items-center gap-3">
             <BrainMark size={32} />
             {!isCompact && (
               <div>
-                <div className="brand-name">Company’s Brain</div>
+                <div className="brand-name">GibCom</div>
                 <div className="brand-caption">Collective intelligence</div>
               </div>
             )}
@@ -284,118 +284,118 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         </div>
 
-        {/* Finished Workspace Switcher */}
-        <div className="relative" ref={popoverRef}>
-          <button
-            onClick={() => setWorkspaceDropdownOpen((v) => !v)}
-            className="workspace-switch w-[calc(100%-36px)] text-left cursor-pointer hover:bg-white/5 transition-colors"
-            title={isCompact ? workspace.name : undefined}
-          >
-            <span className="workspace-avatar">{workspace.name.charAt(0)}</span>
-            {!isCompact && (
-              <>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] text-[#d6ddc9] truncate">{workspace.name}</p>
-                  <p className="text-[9px] text-[#809373] mt-0.5 capitalize">
-                    {workspace.role || 'Member'} · Org
-                  </p>
-                </div>
-                <ChevronDown
-                  size={13}
-                  className={`text-[#7c8b71] transition-transform ${
-                    workspaceDropdownOpen ? 'rotate-180' : ''
-                  }`}
-                />
-              </>
-            )}
-          </button>
+        {/* Scrollable Middle Navigation & Wisdom Area */}
+        <div className="sidebar-scroll-area">
+          {/* Workspace Switcher */}
+          <div className="relative" ref={popoverRef}>
+            <button
+              onClick={() => setWorkspaceDropdownOpen((v) => !v)}
+              className="workspace-switch w-[calc(100%-36px)] text-left cursor-pointer hover:bg-white/5 transition-colors"
+              title={isCompact ? workspace.name : undefined}
+            >
+              <span className="workspace-avatar">{workspace.name.charAt(0)}</span>
+              {!isCompact && (
+                <>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] text-[#d6ddc9] truncate">{workspace.name}</p>
+                    <p className="text-[9px] text-[#809373] mt-0.5 capitalize">
+                      {workspace.role || 'Member'} · Org
+                    </p>
+                  </div>
+                  <ChevronDown
+                    size={13}
+                    className={`text-[#7c8b71] transition-transform ${
+                      workspaceDropdownOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </>
+              )}
+            </button>
 
-          {/* Interactive Workspace Popover */}
-          {workspaceDropdownOpen && (
-            <div className="workspace-popover">
-              <div className="pb-3 border-b border-[#364336] mb-2 px-1">
-                <span className="eyebrow text-[#8da075]">ACTIVE WORKSPACE</span>
-                <p className="text-xs font-medium text-[#edf3e4] mt-1">{workspace.name}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="pill pill-sage capitalize !text-[8px]">{workspace.role}</span>
-                  <span className="text-[9px] text-[#829672]">8 Team Members</span>
+            {/* Interactive Workspace Popover */}
+            {workspaceDropdownOpen && (
+              <div className="workspace-popover">
+                <div className="pb-3 border-b border-[#364336] mb-2 px-1">
+                  <span className="eyebrow text-[#8da075]">ACTIVE WORKSPACE</span>
+                  <p className="text-xs font-medium text-[#edf3e4] mt-1">{workspace.name}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="pill pill-sage capitalize !text-[8px]">{workspace.role}</span>
+                    <span className="text-[9px] text-[#829672]">8 Team Members</span>
+                  </div>
                 </div>
+                <Link
+                  href="/admin?tab=settings"
+                  className="workspace-popover-item"
+                  onClick={() => setWorkspaceDropdownOpen(false)}
+                >
+                  <Settings2 size={13} />
+                  <span>Workspace Settings</span>
+                </Link>
+                <Link
+                  href="/insights"
+                  className="workspace-popover-item"
+                  onClick={() => setWorkspaceDropdownOpen(false)}
+                >
+                  <Users size={13} />
+                  <span>Insight Collaborators</span>
+                </Link>
+                <Link
+                  href="/admin?tab=sources"
+                  className="workspace-popover-item"
+                  onClick={() => setWorkspaceDropdownOpen(false)}
+                >
+                  <FolderOpen size={13} />
+                  <span>Source Library</span>
+                </Link>
               </div>
-              <Link
-                href="/admin?tab=settings"
-                className="workspace-popover-item"
-                onClick={() => setWorkspaceDropdownOpen(false)}
-              >
-                <Settings2 size={13} />
-                <span>Workspace Settings</span>
-              </Link>
-              <Link
-                href="/insights"
-                className="workspace-popover-item"
-                onClick={() => setWorkspaceDropdownOpen(false)}
-              >
-                <Users size={13} />
-                <span>Insight Collaborators</span>
-              </Link>
-              <Link
-                href="/admin?tab=sources"
-                className="workspace-popover-item"
-                onClick={() => setWorkspaceDropdownOpen(false)}
-              >
-                <FolderOpen size={13} />
-                <span>Source Library</span>
-              </Link>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
-        {/* WORKSPACE NAV */}
-        {!isCompact && <p className="sidebar-caption">WORKSPACE</p>}
-        <nav className="sidebar-nav">
-          {navItems.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={isCompact ? item.label : undefined}
-                aria-current={active ? 'page' : undefined}
-                className={`nav-link ${active ? 'active' : ''}`}
-              >
-                <item.icon size={17} />
-                {!isCompact && <span>{item.label}</span>}
-                {!isCompact && item.badge && <span className="nav-badge">{item.badge}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* MANAGE NAV */}
-        <div className="mt-6">
-          {!isCompact && <p className="sidebar-caption">MANAGE</p>}
+          {/* WORKSPACE NAV */}
+          {!isCompact && <p className="sidebar-caption">WORKSPACE</p>}
           <nav className="sidebar-nav">
-            {manageItems.map((item) => {
-              const active = pathname === item.href.split('?')[0];
+            {navItems.map((item) => {
+              const active = pathname === item.href;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   title={isCompact ? item.label : undefined}
-                  className={`nav-link ${active && pathname === item.href ? 'active' : ''}`}
+                  aria-current={active ? 'page' : undefined}
+                  className={`nav-link ${active ? 'active' : ''}`}
                 >
-                  <item.icon size={16} />
+                  <item.icon size={17} />
                   {!isCompact && <span>{item.label}</span>}
+                  {!isCompact && item.badge && <span className="nav-badge">{item.badge}</span>}
                 </Link>
               );
             })}
           </nav>
-        </div>
 
-        {/* Sidebar Bottom & User Profile */}
-        <div className="sidebar-bottom">
+          {/* MANAGE NAV */}
+          <div className="mt-6">
+            {!isCompact && <p className="sidebar-caption">MANAGE</p>}
+            <nav className="sidebar-nav">
+              {manageItems.map((item) => {
+                const active = pathname === item.href.split('?')[0];
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={isCompact ? item.label : undefined}
+                    className={`nav-link ${active && pathname === item.href ? 'active' : ''}`}
+                  >
+                    <item.icon size={16} />
+                    {!isCompact && <span>{item.label}</span>}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
           {/* Wisdom Quote Card */}
-          {!isCompact && (
-            <div className="sidebar-note grain">
+          {/* {!isCompact && (
+            <div className="sidebar-note grain my-5 mx-4">
               <Sparkles size={16} className="text-[#b9ca92]" />
               <p>
                 A little knowledge.
@@ -415,38 +415,53 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <ArrowUpRight size={13} />
               </Link>
             </div>
-          )}
+          )} */}
+        </div>
 
-          {/* Account Profile Bar */}
+        {/* Pinned Bottom Footer & User Profile */}
+        <div className="sidebar-footer">
           <div className="sidebar-account">
-            <div className="sidebar-avatar" title={session.user?.name || 'Account'}>
-              {initials}
-            </div>
-            {!isCompact && (
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] text-[#d7decb] truncate">{session.user?.name}</p>
-                <p className="text-[9px] text-[#809171] mt-0.5 capitalize">
-                  {workspace.role || 'Member'}
-                </p>
-              </div>
-            )}
             {!isCompact ? (
-              <button
-                aria-label="Sign out"
-                title="Sign out"
-                onClick={() => signOut({ callbackUrl: '/auth/login' })}
-                className="p-1.5 rounded hover:bg-white/10 text-[#859677] hover:text-white transition-colors"
-              >
-                <LogOut size={14} />
-              </button>
+              <>
+                <div className="sidebar-avatar" title={session.user?.name || 'Account'}>
+                  {initials}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] text-[#d7decb] truncate">{session.user?.name}</p>
+                  <p className="text-[9px] text-[#809171] mt-0.5 capitalize">
+                    {workspace.role || 'Member'}
+                  </p>
+                </div>
+                <button
+                  aria-label="Sign out"
+                  title="Sign out"
+                  onClick={() => signOut({ callbackUrl: '/auth/login' })}
+                  className="p-1.5 rounded hover:bg-white/10 text-[#859677] hover:text-white transition-colors"
+                >
+                  <LogOut size={14} />
+                </button>
+              </>
             ) : (
-              <button
-                onClick={toggleCompact}
-                className="mt-3 text-[#7d906f] hover:text-[#e4edd5] p-1"
-                title="Expand sidebar"
-              >
-                <ChevronsRight size={14} />
-              </button>
+              <div className="compact-user-controls">
+                <div className="sidebar-avatar" title={session.user?.name || 'Account'}>
+                  {initials}
+                </div>
+                <button
+                  aria-label="Sign out"
+                  title="Sign out"
+                  onClick={() => signOut({ callbackUrl: '/auth/login' })}
+                  className="p-1.5 rounded hover:bg-white/10 text-[#859677] hover:text-white transition-colors"
+                >
+                  <LogOut size={13} />
+                </button>
+                <button
+                  onClick={toggleCompact}
+                  className="text-[#7d906f] hover:text-[#e4edd5] p-1"
+                  title="Expand sidebar"
+                >
+                  <ChevronsRight size={13} />
+                </button>
+              </div>
             )}
           </div>
         </div>

@@ -8,14 +8,17 @@ import {
   BookOpen,
   BriefcaseBusiness,
   Check,
+  CheckCircle2,
   ClipboardList,
   Copy,
   Download,
   FileText,
   Loader2,
+  Play,
   ShieldCheck,
   Sparkles,
   Users,
+  X,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -125,6 +128,10 @@ export default function ActionsPage() {
   const [generating, setGenerating] = useState(false);
   const [formError, setFormError] = useState('');
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [activeProposal, setActiveProposal] = useState<Proposal | null>(null);
+  const [executionNotes, setExecutionNotes] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [notice, setNotice] = useState('');
   const [copied, setCopied] = useState(false);
 
   const action = actionTypes.find((item) => item.type === selected);
@@ -144,7 +151,7 @@ export default function ActionsPage() {
     setFormError('');
 
     try {
-      const result = await request<GenerateResponse>('/api/actions', {
+      const result = await request<{ proposalId?: string; generated?: Draft }>('/api/actions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -160,6 +167,17 @@ export default function ActionsPage() {
       }
 
       setDraft(result.generated);
+      if (result.proposalId) {
+        setActiveProposal({
+          id: result.proposalId,
+          title: result.generated.title,
+          description: context.trim(),
+          actionType: selected,
+          approvalStatus: 'pending',
+          createdAt: new Date().toISOString(),
+          proposedExecution: result.generated,
+        });
+      }
       setSelected(null);
       setContext('');
 
@@ -172,6 +190,52 @@ export default function ActionsPage() {
       );
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!activeProposal) return;
+    setActionLoading(true);
+    setFormError('');
+    try {
+      await request(`/api/actions/${activeProposal.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve' }),
+      });
+      setNotice(`Proposal "${activeProposal.title}" approved.`);
+      setActiveProposal({ ...activeProposal, approvalStatus: 'approved' });
+      await refresh();
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : 'Failed to approve');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleExecute = async () => {
+    if (!activeProposal) return;
+    setActionLoading(true);
+    setFormError('');
+    try {
+      const res = await request<{ success: boolean; memoryId: string; message: string }>(
+        `/api/actions/${activeProposal.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'execute', notes: executionNotes }),
+        }
+      );
+      setNotice(
+        `Action executed! Outcome preserved in organizational memory (Memory ID: ${res.memoryId ? res.memoryId.slice(0, 8) + '...' : 'created'}).`
+      );
+      setActiveProposal({ ...activeProposal, approvalStatus: 'executed' });
+      setExecutionNotes('');
+      await refresh();
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : 'Failed to execute');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -226,6 +290,20 @@ export default function ActionsPage() {
         title="Put your knowledge to work."
         description="Thoughtful drafts, informed by everything your company has learned."
       />
+
+      {notice && (
+        <div className="success-note mb-5" role="status">
+          <CheckCircle2 size={15} />
+          <span>{notice}</span>
+          <button
+            onClick={() => setNotice('')}
+            aria-label="Dismiss notice"
+            className="ml-auto"
+          >
+            <X size={13} />
+          </button>
+        </div>
+      )}
 
       <div className="actions-banner">
         <div className="soft-icon !bg-[#e8eedc] !border-[#d9e3c7]">
@@ -305,6 +383,8 @@ export default function ActionsPage() {
               onClick={() => {
                 setFormError('');
                 setCopied(false);
+                setActiveProposal(proposal);
+                setExecutionNotes('');
 
                 setDraft({
                   title:
@@ -331,10 +411,21 @@ export default function ActionsPage() {
                 </p>
               </div>
 
-              <span className="pill pill-gold">
+              <span
+                className={`pill ${proposal.approvalStatus === 'executed'
+                    ? 'pill-sage font-medium'
+                    : proposal.approvalStatus === 'approved'
+                      ? 'pill-sage'
+                      : proposal.approvalStatus === 'rejected'
+                        ? 'pill-rose'
+                        : 'pill-gold'
+                  }`}
+              >
                 {proposal.approvalStatus === 'pending'
                   ? 'Awaiting review'
-                  : proposal.approvalStatus}
+                  : proposal.approvalStatus === 'executed'
+                    ? '✓ Executed & In Memory'
+                    : proposal.approvalStatus}
               </span>
 
               <ArrowUpRight size={13} />
@@ -421,14 +512,36 @@ export default function ActionsPage() {
           title={draft.title}
           onClose={() => {
             setDraft(null);
+            setActiveProposal(null);
+            setExecutionNotes('');
             setCopied(false);
             setFormError('');
           }}
         >
-          <div className="flex gap-2 mb-6">
-            <span className="pill pill-gold">
-              Draft · Review before use
+          <div className="flex flex-wrap gap-2 mb-6 items-center">
+            <span
+              className={`pill ${activeProposal?.approvalStatus === 'executed'
+                  ? 'pill-sage font-medium'
+                  : activeProposal?.approvalStatus === 'approved'
+                    ? 'pill-sage'
+                    : activeProposal?.approvalStatus === 'rejected'
+                      ? 'pill-rose'
+                      : 'pill-gold'
+                }`}
+            >
+              {activeProposal?.approvalStatus === 'executed'
+                ? '✓ Executed & In Memory'
+                : activeProposal?.approvalStatus === 'approved'
+                  ? '✓ Approved'
+                  : activeProposal?.approvalStatus === 'rejected'
+                    ? 'Rejected'
+                    : 'Draft · Awaiting Review'}
             </span>
+            {activeProposal?.actionType && (
+              <span className="pill capitalize text-[#90a279]">
+                {activeProposal.actionType.replace(/_/g, ' ')}
+              </span>
+            )}
           </div>
 
           <div className="answer-prose">
@@ -442,6 +555,65 @@ export default function ActionsPage() {
               ))}
             </ol>
           )}
+
+          {/* Continuous Learning / Execution Box */}
+          {activeProposal && activeProposal.approvalStatus === 'executed' ? (
+            <div className="p-4 rounded-xl bg-[#f0f4ea] border border-[#d6e2c8] text-xs leading-6 text-[#4a5f36] my-6">
+              <div className="flex items-center gap-2 font-medium mb-1">
+                <CheckCircle2 size={16} className="text-[#6c8651]" />
+                Preserved in Organizational Memory
+              </div>
+              <p>
+                This action was executed and fed back into GibCom as structured knowledge. Future answers, insights, and handovers automatically ground in this outcome.
+              </p>
+            </div>
+          ) : activeProposal ? (
+            <div className="p-4 rounded-xl bg-[#f6f8f2] border border-[#e2ebd7] my-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs font-medium text-[#4f643c] flex items-center gap-1.5">
+                  <ShieldCheck size={14} />
+                  Continuous Learning & Execution Loop
+                </div>
+                {activeProposal.approvalStatus === 'pending' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleApprove}
+                    disabled={actionLoading}
+                    className="!text-[11px] !py-1 !h-7"
+                  >
+                    {actionLoading ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                    Approve draft
+                  </Button>
+                )}
+              </div>
+              <label htmlFor="execution-notes" className="field-label !text-[10px]">
+                Execution notes / outcome (optional)
+              </label>
+              <textarea
+                id="execution-notes"
+                rows={2}
+                className="input-field leading-5 !text-xs !py-2 mb-3"
+                placeholder="e.g. Conducted handover with David Kim; ownership transferred in PagerDuty."
+                value={executionNotes}
+                onChange={(e) => setExecutionNotes(e.target.value)}
+                disabled={actionLoading}
+              />
+              <Button
+                size="sm"
+                onClick={handleExecute}
+                disabled={actionLoading}
+                className="w-full !text-xs"
+              >
+                {actionLoading ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <Play size={13} />
+                )}
+                Execute & Commit to Organizational Memory
+              </Button>
+            </div>
+          ) : null}
 
           <div className="flex gap-3 mt-7 pt-5 border-t">
             <Button

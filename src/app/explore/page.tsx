@@ -58,6 +58,9 @@ export default function ExploreBrainPage() {
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
   const [entityRels, setEntityRels] = useState<Relationship[]>([]);
+  const [entityMemories, setEntityMemories] = useState<any[]>([]);
+  const [entityEvents, setEntityEvents] = useState<any[]>([]);
+  const [detailTab, setDetailTab] = useState<'relationships' | 'memories' | 'timeline'>('relationships');
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [loading, setLoading] = useState(true);
@@ -109,9 +112,15 @@ export default function ExploreBrainPage() {
     try {
       const res = await fetch(`/api/entities/${entity.id}`);
       const data = await res.json();
-      if (data.success) setEntityRels(data.data.relationships);
+      if (data.success) {
+        setEntityRels(data.data.relationships || []);
+        setEntityMemories(data.data.memories || []);
+        setEntityEvents(data.data.events || []);
+      }
     } catch {
       setEntityRels([]);
+      setEntityMemories([]);
+      setEntityEvents([]);
     }
   }, []);
 
@@ -316,39 +325,120 @@ export default function ExploreBrainPage() {
           )}
         </div>
 
-        {/* Entity detail panel */}
+        {/* Entity detail panel with Knowledge Graph, Memories & Temporal Timeline */}
         {selectedEntity && (
-          <div className="border-t p-4 max-h-72 overflow-y-auto">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: typeColors[selectedEntity.entityType] || '#888' }} />
-              <h2 className="font-semibold">{selectedEntity.name}</h2>
-              <Badge variant="outline">{selectedEntity.entityType}</Badge>
+          <div className="border-t p-4 max-h-80 overflow-y-auto bg-background">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: typeColors[selectedEntity.entityType] || '#888' }} />
+                <h2 className="font-semibold text-sm">{selectedEntity.name}</h2>
+                <Badge variant="outline" className="text-[10px]">{selectedEntity.entityType}</Badge>
+              </div>
+
+              {/* Sub-tabs */}
+              <div className="flex gap-1">
+                <Button
+                  size="sm"
+                  variant={detailTab === 'relationships' ? 'default' : 'ghost'}
+                  className="!text-[10px] !h-7 !px-2.5"
+                  onClick={() => setDetailTab('relationships')}
+                >
+                  Graph ({entityRels.length})
+                </Button>
+                <Button
+                  size="sm"
+                  variant={detailTab === 'memories' ? 'default' : 'ghost'}
+                  className="!text-[10px] !h-7 !px-2.5"
+                  onClick={() => setDetailTab('memories')}
+                >
+                  Memories ({entityMemories.length})
+                </Button>
+                <Button
+                  size="sm"
+                  variant={detailTab === 'timeline' ? 'default' : 'ghost'}
+                  className="!text-[10px] !h-7 !px-2.5"
+                  onClick={() => setDetailTab('timeline')}
+                >
+                  Timeline ({entityEvents.length})
+                </Button>
+              </div>
             </div>
+
             {selectedEntity.description && (
-              <p className="text-sm text-muted-foreground mb-3">{selectedEntity.description}</p>
+              <p className="text-xs text-muted-foreground mb-3">{selectedEntity.description}</p>
             )}
-            {entityRels.length > 0 && (
+
+            {detailTab === 'relationships' && (
               <div>
-                <h3 className="text-xs font-medium text-muted-foreground mb-2">RELATIONSHIPS ({entityRels.length})</h3>
-                <div className="space-y-1.5">
-                  {entityRels.map((rel) => {
-                    const isSource = rel.sourceEntity?.id === selectedEntity.id;
-                    const other = isSource ? rel.targetEntity : rel.sourceEntity;
-                    return (
-                      <div key={rel.id} className="flex items-center gap-2 text-xs p-1.5 rounded bg-muted/50">
-                        <span className="font-medium">{isSource ? '→' : '←'}</span>
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{rel.relationshipType}</Badge>
-                        <button
-                          onClick={() => other && selectEntity(other)}
-                          className="text-primary hover:underline"
-                        >
-                          {other?.name}
-                        </button>
-                        <span className="text-muted-foreground ml-auto">{((rel.confidence || 0) * 100).toFixed(0)}%</span>
+                {entityRels.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {entityRels.map((rel) => {
+                      const isSource = rel.sourceEntity?.id === selectedEntity.id;
+                      const other = isSource ? rel.targetEntity : rel.sourceEntity;
+                      return (
+                        <div key={rel.id} className="flex items-center gap-2 text-xs p-2 rounded bg-muted/50">
+                          <span className="font-medium text-muted-foreground">{isSource ? '→' : '←'}</span>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{rel.relationshipType}</Badge>
+                          <button
+                            onClick={() => other && selectEntity(other)}
+                            className="text-primary hover:underline font-medium"
+                          >
+                            {other?.name}
+                          </button>
+                          <span className="text-muted-foreground ml-auto text-[10px]">
+                            {((rel.confidence || 0) * 100).toFixed(0)}% confidence
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground py-2">No direct relationships connected yet.</p>
+                )}
+              </div>
+            )}
+
+            {detailTab === 'memories' && (
+              <div className="space-y-2">
+                {entityMemories.length > 0 ? (
+                  entityMemories.map((mem: any) => (
+                    <div key={mem.id} className="p-2.5 rounded bg-muted/40 border border-border/50 text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <strong className="text-foreground">{mem.title}</strong>
+                        <span className="pill pill-sage !text-[9px] uppercase">{mem.memoryType}</span>
                       </div>
-                    );
-                  })}
-                </div>
+                      <p className="text-muted-foreground text-[11px] leading-relaxed">{mem.description}</p>
+                      <div className="flex items-center gap-2 pt-1 text-[10px] text-muted-foreground">
+                        <span>Confidence: {((mem.confidence || 0) * 100).toFixed(0)}%</span>
+                        <span>·</span>
+                        <span className="capitalize">{mem.verificationStatus}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground py-2">No structured institutional memories linked directly to this entity.</p>
+                )}
+              </div>
+            )}
+
+            {detailTab === 'timeline' && (
+              <div className="space-y-2">
+                {entityEvents.length > 0 ? (
+                  entityEvents.map((evt: any) => (
+                    <div key={evt.id} className="p-2.5 rounded bg-muted/40 border-l-2 border-primary text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <strong className="text-foreground">{evt.title}</strong>
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          {evt.eventDate ? new Date(evt.eventDate).toLocaleDateString() : 'Historical'}
+                        </span>
+                      </div>
+                      {evt.description && <p className="text-muted-foreground text-[11px]">{evt.description}</p>}
+                      <Badge variant="outline" className="text-[9px] capitalize">{evt.eventType || 'Event'}</Badge>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground py-2">No temporal timeline events logged for this entity.</p>
+                )}
               </div>
             )}
           </div>

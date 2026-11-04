@@ -74,17 +74,23 @@
 /* Resizable Panels & Finished Left/Right Panel Enhancements */
 .sidebar-resizer{position:absolute;top:0;right:-4px;width:8px;height:100%;cursor:col-resize;z-index:60;transition:background .2s;background:transparent}
 .sidebar-resizer:hover,.sidebar-resizer.is-dragging{background:#7c956460}
-.app-sidebar{position:relative;transition:width .15s cubic-bezier(.4,0,.2,1)}
+.app-sidebar{position:relative;height:100dvh;max-height:100dvh;display:flex;flex-direction:column;overflow:hidden;background:#202925;transition:width .15s cubic-bezier(.4,0,.2,1)}
+.sidebar-scroll-area{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;scrollbar-width:thin;scrollbar-color:#3b453d transparent}
+.sidebar-scroll-area::-webkit-scrollbar{width:5px}
+.sidebar-scroll-area::-webkit-scrollbar-track{background:transparent}
+.sidebar-scroll-area::-webkit-scrollbar-thumb{background:#364234;border-radius:4px}
+.sidebar-scroll-area::-webkit-scrollbar-thumb:hover{background:#4a5a48}
+.sidebar-footer{flex-shrink:0;margin-top:auto;background:#1b231f;border-top:1px solid #2e3a2d;z-index:20}
 .app-sidebar.is-resizing{transition:none;user-select:none}
 .app-sidebar.is-compact{width:68px!important}
-.app-sidebar.is-compact .brand-name,.app-sidebar.is-compact .brand-caption,.app-sidebar.is-compact .sidebar-caption,.app-sidebar.is-compact .sidebar-note,.app-sidebar.is-compact .sidebar-account div:not(.sidebar-avatar),.app-sidebar.is-compact .nav-link span,.app-sidebar.is-compact .nav-badge,.app-sidebar.is-compact .workspace-switch div:not(.workspace-avatar),.app-sidebar.is-compact .workspace-switch svg{display:none!important}
+.app-sidebar.is-compact .brand-name,.app-sidebar.is-compact .brand-caption,.app-sidebar.is-compact .sidebar-caption,.app-sidebar.is-compact .sidebar-note,.app-sidebar.is-compact .sidebar-account div:not(.sidebar-avatar):not(.compact-user-controls),.app-sidebar.is-compact .nav-link span,.app-sidebar.is-compact .nav-badge,.app-sidebar.is-compact .workspace-switch div:not(.workspace-avatar),.app-sidebar.is-compact .workspace-switch svg{display:none!important}
 .app-sidebar.is-compact .sidebar-brand{padding:25px 16px;justify-content:center}
 .app-sidebar.is-compact .workspace-switch{margin:0 10px 20px;padding:8px;justify-content:center}
 .app-sidebar.is-compact .sidebar-nav{padding:0 8px;gap:8px}
 .app-sidebar.is-compact .nav-link{padding:12px;justify-content:center}
 .app-sidebar.is-compact .nav-link.active:before{left:-8px}
-.app-sidebar.is-compact .sidebar-account{padding:15px 10px;justify-content:center}
-.app-sidebar.is-compact .sidebar-account button{display:none}
+.app-sidebar.is-compact .sidebar-account{padding:12px 6px;justify-content:center}
+.app-sidebar.is-compact .sidebar-account .compact-user-controls{display:flex!important;flex-direction:column;align-items:center;gap:6px}
 .sidebar-toggle-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;color:#7e8e78;border:1px solid #364234;background:#242e27;margin-left:auto;transition:all .2s;cursor:pointer}
 .sidebar-toggle-btn:hover{color:#e8f0dc;background:#324032;border-color:#4a5c48}
 .nav-badge{margin-left:auto;font-size:9px;padding:2px 6px;border-radius:10px;background:#364534;color:#bdd0a4;font-weight:500;line-height:1.2}

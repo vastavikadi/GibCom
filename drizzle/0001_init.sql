@@ -1,4 +1,4 @@
--- Company's Brain - Database Schema (pgvector)
+-- GibCom - Database Schema (pgvector)
 -- Run: psql -U postgres -d gibcom -f drizzle/0001_init.sql
 
 -- Enable pgvector extension

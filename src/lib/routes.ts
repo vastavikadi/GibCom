@@ -92,6 +92,7 @@ export const postTeach = api(async (request, actor, tx) => {
       input: z.string().trim().min(3).max(12000),
       memoryType: z.enum(memoryTypes).optional(),
       proposal: memorySchema.optional(),
+      clarifications: z.record(z.string()).optional(),
       accessPolicy: z.enum(['organization', 'private']).default('organization'),
     })
     .parse(await request.json());
@@ -114,8 +115,56 @@ export const postTeach = api(async (request, actor, tx) => {
       validUntil: null,
       excerpt: body.input,
     };
+
+    const lowerInput = body.input.toLowerCase();
+    const clarifyingQuestions: Array<{
+      id: string;
+      question: string;
+      placeholder?: string;
+      options?: string[];
+    }> = [];
+
+    // Check entity ambiguities
+    const knownPeople = brain.entities.filter((e) => e.entityType === 'person');
+    for (const p of knownPeople) {
+      const firstName = p.name.split(' ')[0].toLowerCase();
+      if (lowerInput.includes(firstName) && !lowerInput.includes(p.name.toLowerCase())) {
+        clarifyingQuestions.push({
+          id: `entity_${p.name.replace(/\s+/g, '_')}`,
+          question: `Did you mean ${p.name} (${(p.attributes as any)?.role || 'Team Member'}, ${(p.attributes as any)?.department || 'Engineering'})?`,
+          options: [`Yes, ${p.name}`, `No, someone else`],
+        });
+      }
+    }
+
+    // Check missing project context if type is decision or process
+    const knownProjects = brain.entities.filter((e) => e.entityType === 'project').map((p) => p.name);
+    const mentionsProject = knownProjects.some((proj) => lowerInput.includes(proj.toLowerCase()));
+    if (!mentionsProject && (body.memoryType === 'decision' || body.memoryType === 'process')) {
+      clarifyingQuestions.push({
+        id: 'project_context',
+        question: 'Which project or service does this primarily affect?',
+        options: knownProjects.length ? [...knownProjects.slice(0, 4), 'Organization-wide'] : ['Project Atlas', 'Payment Gateway', 'Merchant Dashboard', 'Organization-wide'],
+      });
+    }
+
+    // Check missing owner for process
+    if (body.memoryType === 'process' && !lowerInput.includes('owner') && !lowerInput.includes('lead') && !lowerInput.includes('manager')) {
+      clarifyingQuestions.push({
+        id: 'process_owner',
+        question: 'Who is the primary owner or point of contact for this process?',
+        placeholder: 'e.g. James Wright or Customer Success Team',
+      });
+    }
+
+    // Check high impact triggers (architecture, security, pricing, compliance)
+    const highImpactKeywords = ['pricing', 'discount', 'contract', 'architecture', 'security', 'sla', 'vulnerability', 'database', 'migration', 'acv', 'renewal'];
+    const highImpact = highImpactKeywords.some((kw) => lowerInput.includes(kw));
+
     return {
       proposal: { ...proposal, ...(body.memoryType ? { memoryType: body.memoryType } : {}) },
+      clarifyingQuestions: clarifyingQuestions.slice(0, 3),
+      highImpact,
       mode: result.mode,
     };
   }
@@ -133,7 +182,13 @@ export const postTeach = api(async (request, actor, tx) => {
     excerpt: body.input,
   };
 
-  const content = `Employee contribution\n\nOriginal context:\n${body.input}\n\nConfirmed memory:\n${proposal.title}\n${proposal.description}`;
+  const clarificationEntries = Object.entries(body.clarifications || {}).filter(([_, v]) => Boolean(v?.trim()));
+  let enhancedDescription = proposal.description;
+  if (clarificationEntries.length > 0) {
+    enhancedDescription += `\n\nClarifications provided during capture:\n` + clarificationEntries.map(([k, v]) => `- ${k.replace(/_/g, ' ')}: ${v}`).join('\n');
+  }
+
+  const content = `Employee contribution\n\nOriginal context:\n${body.input}\n\nConfirmed memory:\n${proposal.title}\n${enhancedDescription}`;
   const hash = contentHash(actor.userId + body.accessPolicy + content);
 
   const [source] = await tx
@@ -154,7 +209,12 @@ export const postTeach = api(async (request, actor, tx) => {
   const extraction = extractionSchema.parse({
     entities: [],
     relationships: [],
-    memories: [{ ...proposal, excerpt: proposal.description, confidence: Math.min(proposal.confidence, 0.7) }],
+    memories: [{
+      ...proposal,
+      description: enhancedDescription,
+      excerpt: enhancedDescription,
+      confidence: Math.min(proposal.confidence, 0.7),
+    }],
   });
 
   await persistExtraction(
@@ -335,7 +395,8 @@ export const entityDetail = api(async (request, actor, tx) => {
 });
 
 export const memoryDetail = api(async (request, actor, tx) => {
-  const id = z.string().uuid().parse(request.nextUrl.pathname.split('/').pop());
+  const pathname = request.nextUrl?.pathname || new URL(request.url).pathname;
+  const id = z.string().uuid().parse(pathname.split('/').pop());
   const memory = (await loadBrain(tx, actor)).memories.find((m) => m.id === id);
   if (!memory) throw new HttpError(404, 'Memory not found');
 
@@ -347,25 +408,34 @@ export const memoryDetail = api(async (request, actor, tx) => {
 
 export const updateMemory = api(async (request, actor, tx) => {
   requireMinimumRole(actor, 'employee');
-  const id = z.string().uuid().parse(request.nextUrl.pathname.split('/').pop());
+  const pathname = request.nextUrl?.pathname || new URL(request.url).pathname;
+  const id = z.string().uuid().parse(pathname.split('/').pop());
   const body = z
     .object({
-      verificationStatus: z.enum(['verified', 'supported', 'disputed', 'unverified']).optional(),
+      verificationStatus: z.enum(['verified', 'supported', 'disputed', 'unverified', 'superseded']).optional(),
       status: z.enum(['active', 'archived']).optional(),
+      resolutionReason: z.string().optional(),
     })
     .parse(await request.json());
 
   const memory = (await loadBrain(tx, actor)).memories.find((m) => m.id === id);
   if (!memory) throw new HttpError(404, 'Memory not found');
 
+  const updateFields: Record<string, unknown> = {
+    version: sql`${s.memories.version}+1`,
+    updatedAt: new Date(),
+  };
+  if (body.verificationStatus) updateFields.verificationStatus = body.verificationStatus;
+  if (body.status) updateFields.status = body.status;
+
   const [updated] = await tx
     .update(s.memories)
-    .set({ ...body, version: sql`${s.memories.version}+1`, updatedAt: new Date() })
+    .set(updateFields)
     .where(and(eq(s.memories.id, id), eq(s.memories.organizationId, actor.organizationId)))
     .returning();
 
-  await recordVersion(tx, updated, actor.userId, 'Human review and verification');
-  await audit(tx, actor, 'memory_reviewed', id, body);
+  await recordVersion(tx, updated, actor.userId, body.resolutionReason || 'Human review and verification');
+  await audit(tx, actor, 'memory_reviewed', id, { ...body, reason: body.resolutionReason });
   return { updated: true };
 });
 

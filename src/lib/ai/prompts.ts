@@ -1,4 +1,4 @@
-// AI Prompt Templates for Company's Brain
+// AI Prompt Templates for GibCom
 
 export const PROMPTS = {
   EXTRACT_ENTITIES: (text: string, existingEntities: string[] = []) => `
@@ -6,7 +6,7 @@ Analyze the following text from an organizational document and extract all entit
 
 Entity types: person, department, project, customer, vendor, partner, decision, process, technology, document, event, experience.
 
-${existingEntities.length > 0 ? `Known entities in this organization: ${existingEntities.join(', ')}. Match against these when possible.` : ''}
+${existingEntities.length > 0 ? `Known entities in this organization: ${existingEntities.join(", ")}. Match against these when possible.` : ""}
 
 Text:
 """
@@ -45,7 +45,7 @@ Memory types:
 - project: milestones, history, blockers, technical context
 - experience: lessons learned, failures, successes, expertise
 
-Known entities: ${entities.join(', ') || 'none yet'}
+Known entities: ${entities.join(", ") || "none yet"}
 
 Text:
 """
@@ -79,7 +79,7 @@ Extract relationships between entities mentioned in the following text.
 
 Relationship types: WORKS_ON, OWNS, KNOWS_ABOUT, MADE, INVOLVES, DEPENDS_ON, REPORTS_TO, RELATED_TO, COMMUNICATES_WITH, RESULTED_IN, REQUIRES, REPLACED_BY
 
-Known entities: ${entities.join(', ') || 'none yet'}
+Known entities: ${entities.join(", ") || "none yet"}
 
 Text:
 """
@@ -142,8 +142,12 @@ Return JSON:
   "keywords": ["important", "search", "terms"]
 }`,
 
-  SYNTHESIZE_ANSWER: (question: string, context: string, entityContext: string) => `
-You are Company's Brain, an organizational intelligence system. Answer the following question using ONLY the provided evidence and organizational context.
+  SYNTHESIZE_ANSWER: (
+    question: string,
+    context: string,
+    entityContext: string,
+  ) => `
+You are GibCom, an organizational intelligence system. Answer the following question using ONLY the provided evidence and organizational context.
 
 Question: "${question}"
 
@@ -178,7 +182,11 @@ Rules:
 - If the question asks about something not in the evidence, say the information is not available.
 - Confidence should reflect how well the evidence supports the answer.`,
 
-  CONTEXT_RECONSTRUCTION: (topic: string, context: string, timeline: string) => `
+  CONTEXT_RECONSTRUCTION: (
+    topic: string,
+    context: string,
+    timeline: string,
+  ) => `
 You are investigating an organizational topic. Reconstruct the full context using available evidence.
 
 Topic: "${topic}"
@@ -293,4 +301,3 @@ Return JSON:
   "requiredPermissions": ["permission list"]
 }`,
 };
-

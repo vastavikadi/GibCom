@@ -5,7 +5,7 @@ import { AppShell } from '@/components/app-shell';
 
 
 export const metadata: Metadata = {
-  title: "Company's Brain — Organizational Intelligence",
+  title: "GibCom — Organizational Intelligence",
   description: 'The intelligence layer of your organization. An AI-native organizational memory and intelligence platform.',
 };
 
