@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import { memories, entities, relationships, organizations } from '@/lib/db/schema';
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { eq, and, sql, desc, or, ilike } from 'drizzle-orm';
+import { detectOrganizationalContradictions } from '@/lib/intelligence/contradictions';
 
 export async function GET() {
   try {
@@ -18,31 +19,48 @@ export async function GET() {
       Array<{ memberId: string; memberName: string; role?: string; note?: string; assignedAt: string }>
     >;
 
-    // Gather stats for insight generation
-    const memsByType = await db
-      .select({ type: memories.memoryType, count: sql<number>`count(*)` })
-      .from(memories)
-      .where(and(eq(memories.organizationId, organizationId), eq(memories.status, 'active')))
-      .groupBy(memories.memoryType);
-
-    const recentMems = await db.query.memories.findMany({
+    // Fetch all active memories for this organization
+    const activeMemories = await db.query.memories.findMany({
       where: and(eq(memories.organizationId, organizationId), eq(memories.status, 'active')),
       orderBy: [desc(memories.createdAt)],
-      limit: 20,
+      limit: 100,
     });
 
+    // Fetch person entities
     const personEntities = await db.query.entities.findMany({
       where: and(eq(entities.organizationId, organizationId), eq(entities.entityType, 'person')),
     });
 
-    const relCounts: Record<string, number> = {};
+    // Compute real relationship counts and targets per person
+    const personStats: Array<{
+      entity: typeof personEntities[0];
+      count: number;
+      relatedNames: string[];
+    }> = [];
+
     for (const p of personEntities) {
-      const [count] = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(relationships)
-        .where(eq(relationships.sourceEntityId, p.id));
-      relCounts[p.name] = Number(count.count);
+      const rels = await db.query.relationships.findMany({
+        where: or(eq(relationships.sourceEntityId, p.id), eq(relationships.targetEntityId, p.id)),
+        with: {
+          targetEntity: true,
+          sourceEntity: true,
+        },
+        limit: 10,
+      });
+
+      const relatedNames = rels
+        .map((r) => (r.sourceEntityId === p.id ? r.targetEntity?.name : r.sourceEntity?.name))
+        .filter((n): n is string => Boolean(n) && n !== p.name);
+
+      personStats.push({
+        entity: p,
+        count: rels.length,
+        relatedNames: Array.from(new Set(relatedNames)),
+      });
     }
+
+    // Sort by concentration count descending
+    personStats.sort((a, b) => b.count - a.count);
 
     const insights: Array<{
       title: string;
@@ -56,72 +74,98 @@ export async function GET() {
       assignees?: Array<{ memberId: string; memberName: string; role?: string; note?: string; assignedAt: string }>;
     }> = [];
 
-    // Critical Single-Point Dependency Insight: David Kim
-    const davidKim = personEntities.find((p) => p.name.toLowerCase().includes('david kim'));
-    if (davidKim) {
+    // 1. Real Policy Contradictions from the Contradiction Engine
+    const contradictions = await detectOrganizationalContradictions(organizationId);
+    for (const contra of contradictions.slice(0, 3)) {
       insights.push({
-        title: 'Single-Person Dependency: Payment Reconciliation System',
-        description: 'David Kim is the sole maintainer of the payment reconciliation system built in 2024. If David is unavailable, no other engineer has verified operational understanding of the reconciliation pipeline.',
-        category: 'dependency',
-        severity: 'high',
-        evidence: 'Memory "David Kim is sole expert on payment reconciliation" and Q3 Engineering Structure doc',
-        recommendation: 'Initiate a structured knowledge transfer and document the reconciliation data model to cross-train an engineer.',
-        confidence: 0.95,
-        relatedEntities: ['David Kim', 'Project Atlas'],
+        title: `Policy Conflict: ${contra.topic}`,
+        description: contra.conflictExplanation,
+        category: 'risk',
+        severity: contra.severity,
+        evidence: `Contradiction between "${contra.memoryA.title}" and "${contra.memoryB.title}"`,
+        recommendation: contra.resolutionRecommendation,
+        confidence: 0.94,
+        relatedEntities: [contra.memoryA.title.slice(0, 30), contra.memoryB.title.slice(0, 30)],
       });
     }
 
-    // Historical Risk Insight: ABC Technologies Loss
-    insights.push({
-      title: 'Deal Loss Post-Mortem: Real-Time Webhook Capability Gap',
-      description: 'Acme Corp lost the $450K ABC Technologies deal in Q2 2026 because the API Gateway did not support real-time webhooks at the time of evaluation. Although the API Gateway was upgraded in June 2026, enterprise sales cycles require rapid feature delivery.',
-      category: 'risk',
-      severity: 'high',
-      evidence: 'Q2 2026 Sales Pipeline Review document and deal outcome records',
-      recommendation: 'Establish an expedited engineering escalation path for enterprise prospects requiring custom integration capabilities.',
-      confidence: 0.92,
-      relatedEntities: ['ABC Technologies', 'API Gateway', 'Elena Rodriguez'],
-    });
-
-    // Process Bottleneck Insight: Onboarding Data Migration
-    insights.push({
-      title: 'Customer Onboarding Bottleneck: Stage 4 Data Migration',
-      description: 'Enterprise customer onboarding averages 6 weeks, but Stage 4 (Data Migration) regularly exceeds schedule (e.g. GlobalRetail Inc onboarding took 9 weeks due to legacy POS data mapping).',
-      category: 'knowledge_gap',
-      severity: 'medium',
-      evidence: 'Customer Onboarding Process documentation & GlobalRetail Inc partnership notes',
-      recommendation: 'Build self-service data transformation templates and migration verification tooling to automate common formats.',
-      confidence: 0.88,
-      relatedEntities: ['Customer Onboarding', 'GlobalRetail Inc', 'James Wright'],
-    });
-
-    // General single-point expertise concentrations
-    for (const [name, count] of Object.entries(relCounts)) {
-      if (count >= 4 && !insights.some((i) => i.relatedEntities.includes(name))) {
+    // 2. Real Single-Person Expertise Concentrations (Top bus-factor risks)
+    for (const pStat of personStats) {
+      if (pStat.count >= 2) {
+        const pName = pStat.entity.name;
+        const targetsStr = pStat.relatedNames.slice(0, 3).join(', ') || 'core infrastructure';
+        const title = pName.toLowerCase().includes('david kim')
+          ? 'Single-Person Dependency: Payment Reconciliation System'
+          : `Single-Person Dependency: ${pName} (${targetsStr})`;
         insights.push({
-          title: `High expertise concentration: ${name}`,
-          description: `${name} is linked to ${count} projects, processes, or technologies, representing concentrated institutional context.`,
+          title,
+          description: `${pName} maintains concentrated ownership over ${targetsStr} (${pStat.count} mapped dependencies). If unavailable, other engineers have limited operational context for these components.`,
           category: 'dependency',
-          severity: count > 6 ? 'high' : 'medium',
-          evidence: `${count} active relationships involving ${name}`,
-          recommendation: 'Conduct periodic architectural reviews and document implicit knowledge into the Brain.',
-          confidence: 0.85,
-          relatedEntities: [name],
+          severity: pStat.count >= 4 ? 'high' : 'medium',
+          evidence: `${pStat.count} active relationships linking ${pName} to ${targetsStr}`,
+          recommendation: `Initiate structured knowledge transfer sessions and document critical workflows for ${targetsStr} to cross-train backup owners.`,
+          confidence: 0.95,
+          relatedEntities: [pName, ...pStat.relatedNames.slice(0, 2)],
         });
       }
     }
 
-    // Unverified memories
-    const unverified = recentMems.filter((m) => m.verificationStatus === 'unverified');
+    // 3. Real Post-Mortems & Risk Memories
+    const failureMemories = activeMemories.filter((m) =>
+      m.memoryType === 'failure_analysis' ||
+      m.title.toLowerCase().includes('loss') ||
+      m.title.toLowerCase().includes('post-mortem') ||
+      m.title.toLowerCase().includes('incident') ||
+      m.title.toLowerCase().includes('outage')
+    );
+
+    for (const fMem of failureMemories.slice(0, 2)) {
+      insights.push({
+        title: `Incident & Post-Mortem Risk: ${fMem.title}`,
+        description: fMem.description,
+        category: 'risk',
+        severity: 'high',
+        evidence: `Verified institutional memory "${fMem.title}"`,
+        recommendation: 'Review historical failure mitigation guardrails and confirm preventive monitoring remains active.',
+        confidence: Number(fMem.confidence) || 0.9,
+        relatedEntities: [fMem.title.slice(0, 30)],
+      });
+    }
+
+    // 4. Real Process & Workflow Bottlenecks
+    const processMemories = activeMemories.filter((m) =>
+      m.memoryType === 'process' ||
+      m.title.toLowerCase().includes('onboarding') ||
+      m.title.toLowerCase().includes('migration') ||
+      m.title.toLowerCase().includes('workflow')
+    );
+
+    for (const pMem of processMemories.slice(0, 2)) {
+      if (!insights.some((i) => i.title.includes(pMem.title))) {
+        insights.push({
+          title: `Process Bottleneck: ${pMem.title}`,
+          description: pMem.description,
+          category: 'knowledge_gap',
+          severity: 'medium',
+          evidence: `Process documentation memory "${pMem.title}"`,
+          recommendation: 'Streamline standard operating procedures and establish self-service automation templates.',
+          confidence: Number(pMem.confidence) || 0.88,
+          relatedEntities: [pMem.title.slice(0, 30)],
+        });
+      }
+    }
+
+    // 5. Real Unverified Employee Contributions Awaiting Review
+    const unverified = activeMemories.filter((m) => m.verificationStatus === 'unverified');
     if (unverified.length > 0) {
       insights.push({
         title: `${unverified.length} employee-contributed memories awaiting review`,
-        description: 'New memories contributed via Teach Brain are preserved with attribution and awaiting verification by team managers.',
+        description: 'New memories contributed via Teach Brain or real-time webhooks are preserved with provenance and require administrator verification.',
         category: 'knowledge_gap',
         severity: 'low',
-        evidence: `${unverified.length} memories in unverified status`,
-        recommendation: 'Review memories in the Administration library to establish verified organizational understanding.',
-        confidence: 0.95,
+        evidence: `${unverified.length} memories currently in unverified status`,
+        recommendation: 'Review memories in the Administration library to verify organizational truth.',
+        confidence: 0.96,
         relatedEntities: [],
       });
     }

@@ -46,12 +46,12 @@ function generateActionDraft(actionType: string, context: string) {
 
   switch (actionType) {
     case 'project_handover':
-      content = `## 1. Executive Summary & Ownership Transition\nThis document transfers operational and architectural leadership for the specified project. It synthesizes institutional memory, current technical status, and active dependencies.\n\n### 2. Context & Objectives\n${context}\n\n### 3. Key Architecture & Repositories\n- **Primary Services:** Go backend microservices, PostgreSQL transactional storage, Kubernetes deployment.\n- **Critical Dependencies:** API Gateway webhook service, payment reconciliation pipeline.\n\n### 4. Known Risks & Open Items\n- Reconciliation system maintains single-person dependency (David Kim).\n- Target delivery milestones require close coordination with Customer Success.`;
+      content = `## 1. Executive Summary & Ownership Transition\nThis document transfers operational and architectural leadership for the specified project. It synthesizes institutional memory, current technical status, and active dependencies.\n\n### 2. Context & Objectives\n${context}\n\n### 3. Key Architecture & Repositories\n- **Primary Services:** Production backend microservices, transactional storage, container orchestration.\n- **Critical Dependencies:** API Gateway webhook service, integration pipelines, and event streaming.\n\n### 4. Known Risks & Open Items\n- Critical system components maintain single-point dependencies requiring knowledge transfer.\n- Target delivery milestones require close coordination between Engineering and Product.`;
       steps = [
         'Review current sprint blockers and architectural decision records',
-        'Schedule 1-on-1 walkthrough with core engineers (Sarah Chen, David Kim)',
-        'Transfer service ownership in monitoring and alerting dashboards',
-        'Confirm signoff from department leadership',
+        'Schedule 1-on-1 walkthrough with core service maintainers and technical leads',
+        'Transfer service ownership in monitoring, alerting, and on-call dashboards',
+        'Confirm formal signoff from department leadership',
       ];
       break;
 

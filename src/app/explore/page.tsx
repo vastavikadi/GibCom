@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Compass, Search, Users, FolderOpen, Building, Cpu, GitBranch, Loader2 } from 'lucide-react';
+import { Compass, Search, Users, FolderOpen, Building, Cpu, GitBranch, Loader2, ChevronsLeft, ChevronsRight, X, Clock, Layers, Sparkles } from 'lucide-react';
 
 interface Entity {
   id: string;
@@ -66,14 +66,23 @@ export default function ExploreBrainPage() {
   const [loading, setLoading] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Adjustable panel sizes
+  // Adjustable panel sizes (Left & Right)
   const [leftWidth, setLeftWidth] = useState<number>(310);
   const [isLeftCollapsed, setIsLeftCollapsed] = useState<boolean>(false);
   const [isResizingLeft, setIsResizingLeft] = useState<boolean>(false);
 
+  const [rightWidth, setRightWidth] = useState<number>(400);
+  const [isRightCollapsed, setIsRightCollapsed] = useState<boolean>(false);
+  const [isResizingRight, setIsResizingRight] = useState<boolean>(false);
+
   const startResizingLeft = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizingLeft(true);
+  }, []);
+
+  const startResizingRight = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizingRight(true);
   }, []);
 
   useEffect(() => {
@@ -90,6 +99,22 @@ export default function ExploreBrainPage() {
       window.removeEventListener('mouseup', onMouseUp);
     };
   }, [isResizingLeft]);
+
+  useEffect(() => {
+    if (!isResizingRight) return;
+    const onMouseMove = (e: MouseEvent) => {
+      const windowWidth = window.innerWidth;
+      const newWidth = Math.min(700, Math.max(280, windowWidth - e.clientX));
+      setRightWidth(newWidth);
+    };
+    const onMouseUp = () => setIsResizingRight(false);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [isResizingRight]);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
@@ -315,32 +340,92 @@ export default function ExploreBrainPage() {
       </div>
 
       {/* Center: Graph */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex-1 relative bg-muted/30">
+      <div className="flex-1 flex flex-col min-w-0 h-full relative">
+        <div className="flex-1 relative bg-muted/20">
           <canvas ref={canvasRef} className="w-full h-full" style={{ minHeight: 400 }} />
           {entities.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-muted-foreground">Upload documents to populate the knowledge graph</p>
+              <p className="text-muted-foreground text-sm">Upload documents to populate the knowledge graph</p>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Entity detail panel with Knowledge Graph, Memories & Temporal Timeline */}
-        {selectedEntity && (
-          <div className="border-t p-4 max-h-80 overflow-y-auto bg-background">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: typeColors[selectedEntity.entityType] || '#888' }} />
-                <h2 className="font-semibold text-sm">{selectedEntity.name}</h2>
-                <Badge variant="outline" className="text-[10px]">{selectedEntity.entityType}</Badge>
+      {/* Right Resizer Handle */}
+      {!isRightCollapsed && (
+        <div
+          onMouseDown={startResizingRight}
+          className="w-1 cursor-col-resize hover:bg-primary/40 active:bg-primary/60 transition-colors z-20 bg-border/40"
+          title="Drag to resize inspector panel"
+        />
+      )}
+
+      {/* Right Inspector Panel */}
+      <div
+        style={{ width: isRightCollapsed ? '48px' : `${rightWidth}px` }}
+        className="relative border-l bg-background flex flex-col h-full z-10 transition-all duration-75 ease-out flex-shrink-0"
+      >
+        {isRightCollapsed ? (
+          <div className="p-3 flex flex-col items-center gap-4">
+            <button
+              onClick={() => setIsRightCollapsed(false)}
+              className="p-1.5 rounded hover:bg-muted text-muted-foreground"
+              title="Expand Inspector Panel"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </button>
+            <div className="writing-vertical text-xs font-medium text-muted-foreground tracking-widest uppercase">
+              Inspector
+            </div>
+          </div>
+        ) : selectedEntity ? (
+          <div className="flex flex-col h-full min-h-0">
+            {/* Inspector Header */}
+            <div className="p-3.5 border-b space-y-3 bg-muted/20">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: typeColors[selectedEntity.entityType] || '#888' }}
+                  />
+                  <h2 className="font-semibold text-sm truncate" title={selectedEntity.name}>
+                    {selectedEntity.name}
+                  </h2>
+                  <Badge variant="outline" className="text-[10px] uppercase flex-shrink-0">
+                    {selectedEntity.entityType}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => setIsRightCollapsed(true)}
+                    className="p-1 rounded hover:bg-muted text-muted-foreground"
+                    title="Compact Inspector Panel"
+                  >
+                    <ChevronsRight className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setSelectedEntity(null)}
+                    className="p-1 rounded hover:bg-muted text-muted-foreground"
+                    title="Close Inspector"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
 
+              {selectedEntity.description && (
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+                  {selectedEntity.description}
+                </p>
+              )}
+
               {/* Sub-tabs */}
-              <div className="flex gap-1">
+              <div className="flex gap-1 pt-1">
                 <Button
                   size="sm"
                   variant={detailTab === 'relationships' ? 'default' : 'ghost'}
-                  className="!text-[10px] !h-7 !px-2.5"
+                  className="!text-[10px] !h-7 !px-2.5 flex-1"
                   onClick={() => setDetailTab('relationships')}
                 >
                   Graph ({entityRels.length})
@@ -348,7 +433,7 @@ export default function ExploreBrainPage() {
                 <Button
                   size="sm"
                   variant={detailTab === 'memories' ? 'default' : 'ghost'}
-                  className="!text-[10px] !h-7 !px-2.5"
+                  className="!text-[10px] !h-7 !px-2.5 flex-1"
                   onClick={() => setDetailTab('memories')}
                 >
                   Memories ({entityMemories.length})
@@ -356,7 +441,7 @@ export default function ExploreBrainPage() {
                 <Button
                   size="sm"
                   variant={detailTab === 'timeline' ? 'default' : 'ghost'}
-                  className="!text-[10px] !h-7 !px-2.5"
+                  className="!text-[10px] !h-7 !px-2.5 flex-1"
                   onClick={() => setDetailTab('timeline')}
                 >
                   Timeline ({entityEvents.length})
@@ -364,83 +449,121 @@ export default function ExploreBrainPage() {
               </div>
             </div>
 
-            {selectedEntity.description && (
-              <p className="text-xs text-muted-foreground mb-3">{selectedEntity.description}</p>
-            )}
-
-            {detailTab === 'relationships' && (
-              <div>
-                {entityRels.length > 0 ? (
-                  <div className="space-y-1.5">
-                    {entityRels.map((rel) => {
-                      const isSource = rel.sourceEntity?.id === selectedEntity.id;
-                      const other = isSource ? rel.targetEntity : rel.sourceEntity;
-                      return (
-                        <div key={rel.id} className="flex items-center gap-2 text-xs p-2 rounded bg-muted/50">
-                          <span className="font-medium text-muted-foreground">{isSource ? '→' : '←'}</span>
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{rel.relationshipType}</Badge>
-                          <button
-                            onClick={() => other && selectEntity(other)}
-                            className="text-primary hover:underline font-medium"
+            {/* Inspector Tab Content */}
+            <ScrollArea className="flex-1 p-3.5">
+              {detailTab === 'relationships' && (
+                <div>
+                  {entityRels.length > 0 ? (
+                    <div className="space-y-2">
+                      {entityRels.map((rel) => {
+                        const isSource = rel.sourceEntity?.id === selectedEntity.id;
+                        const other = isSource ? rel.targetEntity : rel.sourceEntity;
+                        return (
+                          <div
+                            key={rel.id}
+                            className="flex items-center justify-between text-xs p-2.5 rounded-lg border bg-muted/30 hover:bg-muted/60 transition-colors"
                           >
-                            {other?.name}
-                          </button>
-                          <span className="text-muted-foreground ml-auto text-[10px]">
-                            {((rel.confidence || 0) * 100).toFixed(0)}% confidence
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="font-mono text-xs text-muted-foreground">
+                                {isSource ? '→' : '←'}
+                              </span>
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">
+                                {rel.relationshipType}
+                              </Badge>
+                              <button
+                                onClick={() => other && selectEntity(other)}
+                                className="text-primary hover:underline font-medium truncate"
+                              >
+                                {other?.name}
+                              </button>
+                            </div>
+                            <span className="text-muted-foreground text-[10px] font-mono flex-shrink-0 ml-2">
+                              {((rel.confidence || 0) * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 text-xs text-muted-foreground">
+                      No direct graph relationships connected yet.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {detailTab === 'memories' && (
+                <div className="space-y-2.5">
+                  {entityMemories.length > 0 ? (
+                    entityMemories.map((mem: any) => (
+                      <div
+                        key={mem.id}
+                        className="p-3 rounded-lg bg-card border border-border/70 text-xs space-y-1.5 shadow-sm"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <strong className="text-foreground font-semibold truncate">{mem.title}</strong>
+                          <span className="pill pill-sage !text-[9px] uppercase flex-shrink-0">
+                            {mem.memoryType}
                           </span>
                         </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground py-2">No direct relationships connected yet.</p>
-                )}
-              </div>
-            )}
-
-            {detailTab === 'memories' && (
-              <div className="space-y-2">
-                {entityMemories.length > 0 ? (
-                  entityMemories.map((mem: any) => (
-                    <div key={mem.id} className="p-2.5 rounded bg-muted/40 border border-border/50 text-xs space-y-1">
-                      <div className="flex items-center justify-between">
-                        <strong className="text-foreground">{mem.title}</strong>
-                        <span className="pill pill-sage !text-[9px] uppercase">{mem.memoryType}</span>
+                        <p className="text-muted-foreground text-[11px] leading-relaxed">
+                          {mem.description}
+                        </p>
+                        <div className="flex items-center gap-2 pt-1 text-[10px] text-muted-foreground border-t border-border/40 font-mono">
+                          <span>Confidence: {((mem.confidence || 0) * 100).toFixed(0)}%</span>
+                          <span>·</span>
+                          <span className="capitalize">{mem.verificationStatus}</span>
+                        </div>
                       </div>
-                      <p className="text-muted-foreground text-[11px] leading-relaxed">{mem.description}</p>
-                      <div className="flex items-center gap-2 pt-1 text-[10px] text-muted-foreground">
-                        <span>Confidence: {((mem.confidence || 0) * 100).toFixed(0)}%</span>
-                        <span>·</span>
-                        <span className="capitalize">{mem.verificationStatus}</span>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-10 text-xs text-muted-foreground">
+                      No structured memories linked directly to this entity.
                     </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-muted-foreground py-2">No structured institutional memories linked directly to this entity.</p>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              )}
 
-            {detailTab === 'timeline' && (
-              <div className="space-y-2">
-                {entityEvents.length > 0 ? (
-                  entityEvents.map((evt: any) => (
-                    <div key={evt.id} className="p-2.5 rounded bg-muted/40 border-l-2 border-primary text-xs space-y-1">
-                      <div className="flex items-center justify-between">
-                        <strong className="text-foreground">{evt.title}</strong>
-                        <span className="text-[10px] text-muted-foreground font-mono">
-                          {evt.eventDate ? new Date(evt.eventDate).toLocaleDateString() : 'Historical'}
-                        </span>
+              {detailTab === 'timeline' && (
+                <div className="space-y-2.5">
+                  {entityEvents.length > 0 ? (
+                    entityEvents.map((evt: any) => (
+                      <div
+                        key={evt.id}
+                        className="p-3 rounded-lg bg-card border-l-2 border-primary border-t border-r border-b text-xs space-y-1 shadow-sm"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <strong className="text-foreground font-semibold">{evt.title}</strong>
+                          <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0">
+                            {evt.eventDate ? new Date(evt.eventDate).toLocaleDateString() : 'Historical'}
+                          </span>
+                        </div>
+                        {evt.description && (
+                          <p className="text-muted-foreground text-[11px] leading-relaxed">
+                            {evt.description}
+                          </p>
+                        )}
+                        <Badge variant="outline" className="text-[9px] capitalize">
+                          {evt.eventType || 'Event'}
+                        </Badge>
                       </div>
-                      {evt.description && <p className="text-muted-foreground text-[11px]">{evt.description}</p>}
-                      <Badge variant="outline" className="text-[9px] capitalize">{evt.eventType || 'Event'}</Badge>
+                    ))
+                  ) : (
+                    <div className="text-center py-10 text-xs text-muted-foreground">
+                      No temporal timeline events logged for this entity.
                     </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-muted-foreground py-2">No temporal timeline events logged for this entity.</p>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+        ) : (
+          <div className="p-6 flex flex-col items-center justify-center text-center h-full text-muted-foreground space-y-3">
+            <Compass className="h-8 w-8 text-muted-foreground/60" />
+            <h3 className="font-semibold text-sm text-foreground">Entity Inspector</h3>
+            <p className="text-xs text-muted-foreground max-w-[220px] leading-relaxed">
+              Select any node on the graph or pick an entity from the left list to view its 7D connections, memories, and timeline.
+            </p>
           </div>
         )}
       </div>

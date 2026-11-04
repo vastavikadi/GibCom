@@ -16,7 +16,8 @@ import {
   Brain,
   ShieldAlert,
   Search,
-  Compass
+  Compass,
+  Check
 } from 'lucide-react';
 
 interface HeroProps {
@@ -25,7 +26,7 @@ interface HeroProps {
 
 export function LandingHero({ onOpenDemo }: HeroProps) {
   return (
-    <section className="relative overflow-hidden pt-12 pb-24 md:pt-20 md:pb-36 bg-[#0b0b0c] text-white">
+    <section className="relative overflow-hidden pt-12 pb-24 md:pt-16 md:pb-32 bg-[#0b0b0c] text-white">
       {/* High-tech ambient background grid & neural matrix */}
       <div 
         className="pointer-events-none absolute inset-0 opacity-20"
@@ -116,57 +117,50 @@ export function LandingHero({ onOpenDemo }: HeroProps) {
           </div>
         </div>
 
-        {/* Flanking Statistics + Triple Card Showcase Container */}
-        <div className="relative mt-16 lg:mt-24">
-          {/* Flanking Metrics Left */}
-          <div className="hidden xl:flex flex-col gap-10 absolute left-0 top-1/2 -translate-y-1/2 z-20 text-left">
-            <div>
-              <div className="text-5xl font-black text-white tracking-tight font-mono">100%</div>
-              <div className="text-[11px] font-bold uppercase tracking-widest text-[#c6f432] mt-1 font-mono">
-                DECISION RETENTION
+        {/* 4 Clean Key Metrics - Positioned Above the Cards (No Overlapping) */}
+        <div className="mt-16 max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div className="rounded-xl border border-white/[0.08] bg-[#121413]/70 p-4 text-center backdrop-blur-md hover:border-[#c6f432]/40 transition-colors">
+              <div className="text-3xl sm:text-4xl font-black text-white font-mono tracking-tight">100%</div>
+              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#c6f432] mt-1">
+                Decision Retention
               </div>
-              <p className="text-xs text-neutral-400 mt-1 max-w-[140px]">
-                Zero lost architectural context when key engineers depart
-              </p>
+              <p className="text-[11px] text-neutral-400 mt-1">Zero lost context on turnover</p>
             </div>
-            <div>
-              <div className="text-5xl font-black text-white tracking-tight font-mono">87%</div>
-              <div className="text-[11px] font-bold uppercase tracking-widest text-[#c6f432] mt-1 font-mono">
-                LESS CONTEXT HUNTING
+
+            <div className="rounded-xl border border-white/[0.08] bg-[#121413]/70 p-4 text-center backdrop-blur-md hover:border-[#c6f432]/40 transition-colors">
+              <div className="text-3xl sm:text-4xl font-black text-white font-mono tracking-tight">87%</div>
+              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#c6f432] mt-1">
+                Less Context Hunting
               </div>
-              <p className="text-xs text-neutral-400 mt-1 max-w-[140px]">
-                Instant answers with exact source citations across 5 connectors
-              </p>
+              <p className="text-[11px] text-neutral-400 mt-1">Instant answers with citations</p>
+            </div>
+
+            <div className="rounded-xl border border-white/[0.08] bg-[#121413]/70 p-4 text-center backdrop-blur-md hover:border-[#c6f432]/40 transition-colors">
+              <div className="text-3xl sm:text-4xl font-black text-white font-mono tracking-tight">7D</div>
+              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#c6f432] mt-1">
+                Memory Dimensions
+              </div>
+              <p className="text-[11px] text-neutral-400 mt-1">Decisions, SMEs & Architecture</p>
+            </div>
+
+            <div className="rounded-xl border border-white/[0.08] bg-[#121413]/70 p-4 text-center backdrop-blur-md hover:border-[#c6f432]/40 transition-colors">
+              <div className="text-3xl sm:text-4xl font-black text-white font-mono tracking-tight">0</div>
+              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#c6f432] mt-1">
+                Silent Clashes
+              </div>
+              <p className="text-[11px] text-neutral-400 mt-1">Pre-merge policy guardrails</p>
             </div>
           </div>
+        </div>
 
-          {/* Flanking Metrics Right */}
-          <div className="hidden xl:flex flex-col gap-10 absolute right-0 top-1/2 -translate-y-1/2 z-20 text-right">
-            <div>
-              <div className="text-5xl font-black text-white tracking-tight font-mono">7D</div>
-              <div className="text-[11px] font-bold uppercase tracking-widest text-[#c6f432] mt-1 font-mono">
-                MEMORY DIMENSIONS
-              </div>
-              <p className="text-xs text-neutral-400 mt-1 max-w-[145px] ml-auto">
-                Decisions, Architecture, Failures, SMEs & Constraints
-              </p>
-            </div>
-            <div>
-              <div className="text-5xl font-black text-white tracking-tight font-mono">0</div>
-              <div className="text-[11px] font-bold uppercase tracking-widest text-[#c6f432] mt-1 font-mono">
-                SILENT CONFLICTS
-              </div>
-              <p className="text-xs text-neutral-400 mt-1 max-w-[145px] ml-auto">
-                Automated contradiction detection flags policy clashes early
-              </p>
-            </div>
-          </div>
-
+        {/* Triple Card Showcase Container - Spacious, Uncluttered, Centerpiece */}
+        <div className="relative mt-8">
           {/* Intense Radial Lime Aura directly centered behind the 3 showcase cards */}
           <div 
-            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[440px] rounded-full blur-[100px] opacity-45 z-0"
+            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[400px] rounded-full blur-[120px] opacity-40 z-0"
             style={{
-              background: 'radial-gradient(circle, rgba(198, 244, 50, 0.45) 0%, rgba(198, 244, 50, 0.15) 50%, transparent 80%)',
+              background: 'radial-gradient(circle, rgba(198, 244, 50, 0.45) 0%, rgba(198, 244, 50, 0.12) 50%, transparent 80%)',
             }}
           />
 
@@ -185,11 +179,11 @@ export function LandingHero({ onOpenDemo }: HeroProps) {
                   <span className="text-[10px] text-neutral-400 font-mono">AES-256-GCM</span>
                 </div>
 
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {/* Item 1: Decision */}
-                  <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.05] transition-colors">
+                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.05] transition-colors">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-[9px] font-mono font-bold uppercase text-[#c6f432] tracking-wider">
+                      <span className="text-[10px] font-mono font-bold uppercase text-[#c6f432] tracking-wider">
                         Decision Record
                       </span>
                       <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#c6f432] text-[#0b0b0c]">
@@ -199,15 +193,15 @@ export function LandingHero({ onOpenDemo }: HeroProps) {
                     <p className="text-xs text-neutral-200 font-medium truncate">
                       Migrate session tokens to AES-256-GCM
                     </p>
-                    <div className="text-[10px] text-neutral-500 font-mono mt-0.5">
-                      GitHub PR #421 • Confluence RFC-32
+                    <div className="text-[10px] text-neutral-400 font-mono mt-1">
+                      GitHub PR #421 • RFC-32
                     </div>
                   </div>
 
                   {/* Item 2: SME Routing */}
-                  <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.05] transition-colors">
+                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.05] transition-colors">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-[9px] font-mono font-bold uppercase text-[#36c5f0] tracking-wider">
+                      <span className="text-[10px] font-mono font-bold uppercase text-[#36c5f0] tracking-wider">
                         SME & Code Owner
                       </span>
                       <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-[#c6f432] text-[#c6f432]">
@@ -217,51 +211,33 @@ export function LandingHero({ onOpenDemo }: HeroProps) {
                     <p className="text-xs text-neutral-200 font-medium truncate">
                       Webhook Handler Owner: @erostova
                     </p>
-                    <div className="text-[10px] text-neutral-500 font-mono mt-0.5">
+                    <div className="text-[10px] text-neutral-400 font-mono mt-1">
                       Slack #eng-platform • 28 commits
                     </div>
                   </div>
 
                   {/* Item 3: Contradiction Alert */}
-                  <div className="p-2.5 rounded-lg bg-red-950/20 border border-red-500/30 hover:bg-red-950/30 transition-colors">
+                  <div className="p-3 rounded-xl bg-red-950/20 border border-red-500/30 hover:bg-red-950/30 transition-colors">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-[9px] font-mono font-bold uppercase text-red-400 tracking-wider flex items-center gap-1">
+                      <span className="text-[10px] font-mono font-bold uppercase text-red-400 tracking-wider flex items-center gap-1">
                         <ShieldAlert className="h-3 w-3" />
                         <span>Contradiction Flag</span>
                       </span>
                       <span className="text-[9px] font-medium tracking-wider px-2 py-0.5 rounded-full bg-red-500/20 text-red-300">
-                        High Priority
+                        Resolved
                       </span>
                     </div>
                     <p className="text-xs text-neutral-200 font-medium truncate">
                       15s Gateway TTL vs 60s Checkout TTL
                     </p>
-                    <div className="text-[10px] text-neutral-400 font-mono mt-0.5">
-                      RFC-14 vs PR #294 clash
-                    </div>
-                  </div>
-
-                  {/* Item 4: Failure Intelligence */}
-                  <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.05] transition-colors">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-[9px] font-mono font-bold uppercase text-neutral-400 tracking-wider">
-                        Failure Intelligence
-                      </span>
-                      <span className="text-[9px] font-medium tracking-wider px-2 py-0.5 rounded-full bg-white/[0.06] text-neutral-300">
-                        Resolved
-                      </span>
-                    </div>
-                    <p className="text-xs text-neutral-200 font-medium truncate">
-                      Celery task queue overflow RCA
-                    </p>
-                    <div className="text-[10px] text-neutral-500 font-mono mt-0.5">
-                      Jira INC-88 post-mortem
+                    <div className="text-[10px] text-neutral-400 font-mono mt-1">
+                      RFC-14 policy enforced
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-3 mt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-neutral-400">
+              <div className="pt-3 mt-4 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-neutral-400">
                 <span className="flex items-center gap-1.5">
                   <Activity className="h-3.5 w-3.5 text-[#c6f432]" />
                   <span>Sub-second autonomous sync</span>
@@ -376,15 +352,15 @@ export function LandingHero({ onOpenDemo }: HeroProps) {
                 </div>
 
                 {/* Multi-track Decision Evolution Gantt */}
-                <div className="space-y-2 relative py-1">
+                <div className="space-y-3 relative py-1">
                   {/* Vertical Scan Needle */}
                   <div className="absolute top-0 bottom-0 left-[68%] w-[1.5px] bg-[#c6f432] shadow-[0_0_10px_#c6f432] z-10">
                     <div className="absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full bg-[#c6f432]" />
                   </div>
 
                   {/* Track 1: Vector Search Evolution */}
-                  <div className="space-y-0.5">
-                    <div className="text-[9px] font-mono text-neutral-400 truncate">
+                  <div className="space-y-1">
+                    <div className="text-[9px] font-mono text-neutral-300 truncate">
                       ADR-04: Hybrid Retrieval Engine
                     </div>
                     <div className="grid grid-cols-12 gap-1 h-3.5 items-center">
@@ -394,8 +370,8 @@ export function LandingHero({ onOpenDemo }: HeroProps) {
                   </div>
 
                   {/* Track 2: Security Token Standards */}
-                  <div className="space-y-0.5">
-                    <div className="text-[9px] font-mono text-neutral-400 truncate">
+                  <div className="space-y-1">
+                    <div className="text-[9px] font-mono text-neutral-300 truncate">
                       RFC-32: AES-256-GCM Envelope
                     </div>
                     <div className="grid grid-cols-12 gap-1 h-3.5 items-center">
@@ -406,8 +382,8 @@ export function LandingHero({ onOpenDemo }: HeroProps) {
                   </div>
 
                   {/* Track 3: Database & Cache Boundaries */}
-                  <div className="space-y-0.5">
-                    <div className="text-[9px] font-mono text-neutral-400 truncate">
+                  <div className="space-y-1">
+                    <div className="text-[9px] font-mono text-neutral-300 truncate">
                       POLICY: 15s Redis Gateway Constraint
                     </div>
                     <div className="grid grid-cols-12 gap-1 h-3.5 items-center">
@@ -418,31 +394,11 @@ export function LandingHero({ onOpenDemo }: HeroProps) {
                 </div>
               </div>
 
-              <div className="pt-3 mt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-neutral-400">
+              <div className="pt-3 mt-4 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-neutral-400">
                 <span className="truncate">Active policy guardrails</span>
                 <span className="text-[#c6f432] font-mono">Enforced</span>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Mobile statistics visible on small screens */}
-        <div className="mt-12 grid grid-cols-2 gap-4 xl:hidden sm:grid-cols-4 text-center">
-          <div className="rounded-xl border border-white/[0.07] bg-[#121413]/60 p-4">
-            <div className="text-3xl font-black text-white font-mono">100%</div>
-            <div className="text-[10px] font-mono text-[#c6f432] uppercase tracking-wider mt-1">Decisions Retained</div>
-          </div>
-          <div className="rounded-xl border border-white/[0.07] bg-[#121413]/60 p-4">
-            <div className="text-3xl font-black text-white font-mono">87%</div>
-            <div className="text-[10px] font-mono text-[#c6f432] uppercase tracking-wider mt-1">Less Noise</div>
-          </div>
-          <div className="rounded-xl border border-white/[0.07] bg-[#121413]/60 p-4">
-            <div className="text-3xl font-black text-white font-mono">7D</div>
-            <div className="text-[10px] font-mono text-[#c6f432] uppercase tracking-wider mt-1">Memory Graph</div>
-          </div>
-          <div className="rounded-xl border border-white/[0.07] bg-[#121413]/60 p-4">
-            <div className="text-3xl font-black text-white font-mono">0</div>
-            <div className="text-[10px] font-mono text-[#c6f432] uppercase tracking-wider mt-1">Silent Clashes</div>
           </div>
         </div>
       </div>

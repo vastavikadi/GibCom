@@ -92,7 +92,7 @@ export class MetaAIProvider {
     return `${base.replace(/\/+$/, '')}/chat/completions`;
   }
 
-  private async request(url: string, key: string, body: unknown, timeout = 30000): Promise<any> {
+  private async request(url: string, key: string, body: unknown, timeout = 8000): Promise<any> {
     let lastError: unknown;
     for (let attempt = 0; attempt < 3; attempt++) {
       const controller = new AbortController();
