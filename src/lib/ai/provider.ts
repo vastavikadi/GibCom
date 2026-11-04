@@ -79,7 +79,7 @@ export class MetaAIProvider {
   status() {
     return {
       configured: this.isConfigured,
-      model: this.isConfigured ? (process.env.META_AI_MODEL_ID || 'meta-llama/Llama-3.3-70B-Instruct') : 'evidence-heuristic-fallback',
+      model: this.isConfigured ? (process.env.META_AI_MODEL_ID || 'muse-spark-1.3') : 'evidence-heuristic-fallback',
       mode: this.isConfigured ? 'meta' : 'evidence-only',
       embeddings: this.embeddingConfigured ? 'configured' : 'deterministic-fallback',
       documentationVerified: true,
@@ -110,12 +110,17 @@ export class MetaAIProvider {
         });
 
         if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          const errorMsg =
+            errData.error?.message ||
+            errData.message ||
+            `Model service returned HTTP ${response.status}`;
           const retryAfter = response.headers.get('retry-after');
           if (retryAfter) {
             const seconds = Number(retryAfter);
             retryDelay = Math.min(10000, Number.isFinite(seconds) ? seconds * 1000 : 2000);
           }
-          throw new AIProviderError(`Model service returned HTTP ${response.status}`, response.status, response.status === 429 || response.status >= 500);
+          throw new AIProviderError(errorMsg, response.status, response.status === 429 || response.status >= 500);
         }
         return await response.json();
       } catch (error) {
@@ -143,7 +148,7 @@ export class MetaAIProvider {
       };
     }
 
-    const model = options.model || process.env.META_AI_MODEL_ID || 'meta-llama/Llama-3.3-70B-Instruct';
+    const model = options.model || process.env.META_AI_MODEL_ID || 'muse-spark-1.3';
     const body = {
       model,
       messages,

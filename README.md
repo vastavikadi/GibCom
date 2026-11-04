@@ -1,238 +1,398 @@
 # GibCom — The Intelligence Layer of an Organization
 
-An AI-native organizational memory and intelligence platform that continuously learns from company activity, preserves institutional knowledge, understands organizational context, and helps every employee make better decisions and execute work.
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2-black?style=flat&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-4169E1?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![pgvector](https://img.shields.io/badge/pgvector-1536d-008080?style=flat&logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
+[![Meta AI](https://img.shields.io/badge/Meta_AI-Muse_/_Llama-0668E1?style=flat&logo=meta&logoColor=white)](https://api.meta.ai)
+[![Security](https://img.shields.io/badge/Security-AES--256--GCM-success?style=flat&logo=shield)](https://github.com)
+
+> **The Fundamental Promise:**  
+> *Your company never has to start learning from scratch.*  
+> **Remember · Understand · Connect · Anticipate · Act**
+
+GibCom is an AI-native organizational memory and intelligence platform that continuously learns from daily company activity, preserves institutional knowledge, understands business context, and helps every employee make informed decisions and execute high-impact work.
 
 ---
 
-## 1. Product Overview & Architecture
+## Table of Contents
 
-### The Fundamental Promise
+1. [The Problem Statement & Why GibCom Exists](#the-problem-statement--why-gibcom-exists)
+2. [What Makes GibCom Different & Superior](#what-makes-gibcom-different--superior)
+3. [The Seven Dimensions of Organizational Memory](#the-seven-dimensions-of-organizational-memory)
+4. [System Architecture](#system-architecture)
+5. [The Hybrid Memory Data Model](#the-hybrid-memory-data-model)
+6. [Core Product Modules](#core-product-modules)
+7. [Enterprise Security & Encryption](#enterprise-security--encryption)
+8. [Real Third-Party Connectors (Zero Mock)](#real-third-party-connectors-zero-mock)
+9. [Webhooks & Continuous Ingestion Flywheel](#webhooks--continuous-ingestion-flywheel)
+10. [Quickstart & Deployment Guide](#quickstart--deployment-guide)
+11. [Verification & Testing](#verification--testing)
 
-> **Your company never has to start learning from scratch.**  
-> _Remember · Understand · Connect · Anticipate · Act_
+---
 
-GibCom is built on a **Hybrid Memory Architecture**:
+## The Problem Statement & Why GibCom Exists
 
-1. **Relational Data Model:** 18 normalized PostgreSQL tables managing multi-tenant organizational workspaces, users, role-based access, version histories, decisions, events, and audit trails.
-2. **Knowledge Graph:** Typed, directional relationships (`WORKS_ON`, `OWNS`, `KNOWS_ABOUT`, `MADE`, `INVOLVES`, `DEPENDS_ON`, etc.) connecting people, departments, projects, customers, processes, and technologies.
-3. **pgvector Semantic Memory:** Native 1536-dimensional vector embeddings with cosine similarity distance (`<=>`) across source chunks and memory items.
-4. **Temporal Memory:** Valid-time dimensions (`validFrom`, `validUntil`, `occurredAt`) enabling historical reconstruction (e.g. what was believed at the time of a decision vs. current state).
-5. **Trust & Provenance:** Every claim is tied to supporting or conflicting source evidence with exact excerpts and verification status (`verified`, `supported`, `unverified`, `disputed`, `superseded`).
+### The Crisis of Organizational Amnesia
+
+Modern organizations generate massive volumes of communication across Slack, GitHub, Jira, Confluence, Google Drive, email, and meetings. However, organizations remain fundamentally **amnesic**:
+
+1. **Context Dissolves When People Leave:** When a senior engineer or product lead leaves, their mental model of *why* systems were architected a certain way leaves with them. New hires spend months re-learning lessons already paid for by the company.
+2. **Decisions Are Relitigated in Vain:** Teams re-debate the same architectural decisions, discount policies, and vendor selections because the original context, rejected alternatives, and trade-offs were never persisted.
+3. **Traditional Search & RAG Fail at "Why":** Document retrieval systems (traditional RAG) fetch isolated text chunks. If you ask: *"Why did we lose ABC Technologies 18 months ago?"*, simple semantic search returns a sales deck or contract draft. It cannot reconstruct the causal chain: engineering rejected a custom feature request, which delayed delivery, causing a champion departure, which resulted in deal churn.
+4. **Knowledge Contradictions Grow Undetected:** As companies scale, teams establish conflicting policies in isolated silos (e.g., security mandating SSO while an ops team permits password login; a sales leader approving a 25% discount exception while finance enforces a 10% ceiling).
+
+### The Solution: An Organizational Brain
+
+GibCom is not another document search tool or static wiki. It is an **active intelligence layer** that transforms raw company activity into **structured, connected, temporal institutional memories**. It actively links people to decisions, projects to blockers, and policies to evidence.
+
+---
+
+## What Makes GibCom Different & Superior
+
+| Capability | Traditional Search / Standard RAG | Enterprise Wikis (Confluence/Notion) | **GibCom Company's Brain** |
+| :--- | :--- | :--- | :--- |
+| **Data Representation** | Unstructured text chunks + vector embeddings | Static, human-written hierarchical pages | **Hybrid Memory:** Relational entities + Knowledge Graph + `pgvector` + Valid-Time history |
+| **Query Understanding** | Keyword / basic semantic match | Manual folder navigation & keyword search | **Intent-driven context reconstruction** (historical, strategic, operational, predictive) |
+| **Causal Reasoning** | ❌ None. Returns isolated paragraphs | ❌ None. Manual reading required | ✅ **Reconstructs the multi-step story** behind decisions and outcomes |
+| **Trust & Provenance** | Probabilistic, hallucination-prone | Static timestamps, often outdated | ✅ **Every statement cites verifiable evidence excerpts** with explicit confidence scores |
+| **Contradiction Detection** | ❌ None. Retrieves contradictory chunks simultaneously | ❌ None. Stale pages conflict silently | ✅ **Automated semantic discrepancy scanner** alerts admins to resolve policy/decision clashes |
+| **Temporal Understanding**| ❌ "Latest chunk wins" or timestamp bias | Manual version history | ✅ **Bi-temporal tracking** (`validFrom`, `validUntil`, `occurredAt`, `supersededAt`) |
+| **Action Execution** | Read-only | Manual copy-pasting | ✅ **Closed-loop execution:** Generated actions feed outcomes back into memory |
+| **Connectors** | Generic web scrapers or demo mocks | Manual import | ✅ **Production REST clients & webhooks** (GitHub, Slack, Jira, Confluence, Google Drive) |
+
+---
+
+## The Seven Dimensions of Organizational Memory
+
+GibCom structures all organizational knowledge across seven explicit dimensions:
+
+```
+                          ┌───────────────────────────┐
+                          │     TEMPORAL MEMORY       │
+                          │   (How context evolves    │
+                          │    over time & epochs)    │
+                          └─────────────┬─────────────┘
+                                        │
+         ┌───────────────┬──────────────┼──────────────┬───────────────┐
+         │               │              │              │               │
+   ┌─────▼─────┐   ┌─────▼─────┐  ┌─────▼─────┐  ┌─────▼─────┐   ┌─────▼─────┐
+   │  PEOPLE   │   │  PROCESS  │  │ DECISION  │  │RELATIONSHIP│   │  PROJECT  │
+   │  MEMORY   │   │  MEMORY   │  │  MEMORY   │  │  MEMORY   │   │  MEMORY   │
+   │ Expertise │   │ Workflows │  │ Context & │  │ Customers │   │Milestones │
+   │ Ownership │   │Exceptions │  │ Rationale │  │  Vendors  │   │ Blockers  │
+   └───────────┘   └───────────┘  └───────────┘  └───────────┘   └───────────┘
+                                        │
+                                  ┌─────▼─────┐
+                                  │EXPERIENCE │
+                                  │  MEMORY   │
+                                  │ Lessons & │
+                                  │ Failures  │
+                                  └───────────┘
+```
+
+1. **People Memory:** Who knows what, who owns what, past areas of expertise, and organizational authority.
+2. **Process Memory:** Workflows, practices, standard operating procedures, recurring exceptions, and operational dependencies.
+3. **Decision Memory:** Past choices, alternatives considered, rejected options, economic rationale, and actual outcomes.
+4. **Relationship Memory:** Customers, vendors, partners, contractual commitments, champions, and churn history.
+5. **Project Memory:** Milestones, technical constraints, roadblocks, and architectural evolution across initiatives.
+6. **Experience Memory:** Institutional lessons, post-mortems, failures, successes, and hard-won wisdom.
+7. **Temporal Memory:** A cross-cutting dimension tracking how all knowledge, beliefs, and relationships change over time.
+
+---
+
+## System Architecture
+
+GibCom is architected as an enterprise-ready, layered intelligence platform:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        EXPERIENCE LAYER (UI)                           │
+│                        1. EXPERIENCE LAYER (UI)                        │
 │  Ask Brain · Explore Brain · Brain Insights · Brain Actions · Teach    │
+│  Administration · Real Data Connectors · Audit Trail · Member Hub      │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
 ┌───────────────────────────────────▼────────────────────────────────────┐
-│                        INTELLIGENCE ENGINE                             │
-│  Intent Classification · Hybrid Retrieval · Context Reconstruction     │
-│  Answer Synthesis with Exact Citations · Fact vs Assumption Separation │
+│                       2. INTELLIGENCE ENGINE                           │
+│  Intent Understanding · Hybrid Retrieval · Historical Reconstruction   │
+│  Multi-Perspective Answer Synthesis · Facts vs Assumptions Separation  │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
 ┌───────────────────────────────────▼────────────────────────────────────┐
-│                    ORGANIZATIONAL MEMORY ENGINE                        │
-│  PostgreSQL (Relational) · pgvector (Vectors) · Knowledge Graph        │
-│  Temporal Valid-Time History · Source Provenance & Audit Logs          │
+│                  3. ORGANIZATIONAL MEMORY ENGINE                       │
+│  Structured Relational Memory · Directed Knowledge Graph               │
+│  Vector Memory (pgvector 1536-d) · Bi-Temporal Valid-Time History      │
+│  Evidence Provenance & Verification · Human Governance & Review        │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                    4. KNOWLEDGE INTELLIGENCE                           │
+│  Multi-Format Document Parsing · Entity Resolution & Linking           │
+│  Memory Classification · Contradiction & Discrepancy Detection         │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                    5. INGESTION & LEARNING                             │
+│  REST Connectors (Slack, GitHub, Jira, Confluence, Google Drive)       │
+│  Inbound Webhook Handlers (GitHub, Slack) · Employee Guided Teaching   │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                  6. CROSS-CUTTING PLATFORM SERVICES                    │
+│  Multi-Tenant RBAC · AES-256-GCM Secrets Encryption at Rest            │
+│  Immutable Audit Logging · NextAuth Session Security · PostgreSQL DB   │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. What Was Implemented
+## The Hybrid Memory Data Model
 
-### Backend Core
+The platform avoids shallow document dumps by normalizing context into **18 PostgreSQL tables** with strict referential integrity and Zod schema validation:
 
-- **Database Schema (`src/lib/db/schema.ts`):** 18 tables in PostgreSQL with pgvector support, Drizzle ORM relations, and Zod validation.
-- **pgvector Vector Search:** Native `<=>` cosine distance queries across `source_chunks` and `memories`.
-- **Hybrid Retrieval Engine (`src/lib/engine/retrieval.ts`):** Combines semantic vector similarity, PostgreSQL full-text search (`ts_rank`), 2-hop knowledge graph traversal, and temporal timeline filtering.
-- **Intelligence Engine (`src/lib/engine/intelligence.ts`):**
-  - Query intent classification (historical, strategic, operational, organizational, predictive).
-  - Context reconstruction for "why" / historical investigations.
-  - Multi-perspective synthesis with verifiable citations.
-  - Grounded heuristic reasoning fallback when Meta AI API keys are not present.
-- **Ingestion Pipeline (`src/lib/ingestion/`):** Multi-format parsing (PDF, DOCX, TXT, Markdown, CSV), chunking with overlap, deterministic/API embeddings, and entity/relationship extraction.
-- **RBAC & Provenance (`src/lib/permissions/`):** Role-based access (owner, admin, manager, employee), source visibility policies (`organization`, `private`, `restricted`), and audit logging.
+```
+organizations ────< memberships >──── users
+      │                                 │
+      ├───< sources >───< source_chunks (with pgvector embeddings)
+      │         │
+      │         └───< memory_evidence >───┐
+      │                                   │
+      ├───< entities >───< relationships  │
+      │         │                         │
+      ├───< memories >────────────────────┤
+      │         ├───< memory_versions     │
+      │         └───< decisions           │
+      │                                   │
+      ├───< events (Temporal Timeline)    │
+      ├───< action_proposals ─────────────┘
+      ├───< conversations >───< messages
+      ├───< audit_logs (Immutable Security Trail)
+      └───< corrections & feedback
+```
 
-### Full-Featured Responsive UI
+### Memory Object Schema Contract
 
-- **Dashboard (`/dashboard`):** Real-time statistics, knowledge distribution by dimension, recently learned memories, architectural decisions, and quick search.
-- **Ask Brain (`/ask`):** Conversational intelligence interface supporting deep reasoning, source citations, timelines, facts vs. assumptions, and follow-up prompts.
-- **Explore Brain (`/explore`):** Interactive knowledge graph visualization with entity filters, detail inspectors, and relationship mappings.
-- **Teach Brain (`/teach`):** 3-stage guided employee knowledge contribution (Capture -> Review/Refine -> Confirm & Save) with automatic entity linking.
-- **Brain Insights (`/insights`):** Evidence-backed proactive discoveries (single-person dependencies like David Kim, deal post-mortems like ABC Technologies, and onboarding bottlenecks).
-- **Brain Actions (`/actions`):** 6 actionable draft workflows (Project Handover, Meeting Brief, Customer Report, Onboarding Guide, SOP Documentation, Workflow Improvement) grounded in organizational memory.
-- **Administration (`/admin`):** Document source library with drag-and-drop upload, memory review & verification, and workspace settings.
+Every organizational memory is governed by a persistent structured contract:
+
+```json
+{
+  "id": "c1f7a049-5b74-4b55-a0bc-1849a9bce001",
+  "organization_id": "11111111-1111-1111-1111-111111111111",
+  "memory_type": "decision",
+  "title": "PostgreSQL Single Source of Truth Architecture Decision",
+  "description": "Rejected dual-database NoSQL synchronization for transactional state to eliminate distributed consensus failures.",
+  "subject_entity_id": "8f8b89c3-1124-4f81-a9f8-7d8b8a912e10",
+  "related_entity_ids": ["3b4c5d6e-...", "7a8b9c0d-..."],
+  "attributes": {
+    "alternativesConsidered": ["MongoDB Atlas", "DynamoDB + Postgres CDC"],
+    "decisionMaker": "sarah@acmecorp.com",
+    "technicalTradeOff": "Higher schema migration rigor in exchange for ACID guarantees"
+  },
+  "valid_from": "2024-03-15T00:00:00Z",
+  "valid_until": null,
+  "confidence": 0.94,
+  "verification_status": "verified",
+  "status": "active",
+  "evidence_ids": ["e4f5a6b7-..."],
+  "created_by": "22222222-0001-0001-0001-000000000001",
+  "access_policy": "organization"
+}
+```
 
 ---
 
-## 3. Quickstart & Installation
+## Core Product Modules
+
+### 1. Ask Brain (`/ask`)
+A conversational reasoning interface built on multi-perspective synthesis:
+- **Query Intent Classifier:** Differentiates historical root-cause inquiries from operational lookups, organizational lookups, or policy verifications.
+- **Context Reconstruction:** Rebuilds chronological narratives showing what was believed at the time versus what transpired.
+- **Grounded Citations:** Every assertion links to an excerpted document or conversation with source verification.
+- **Assumptions vs. Facts:** Explicitly separates verified institutional records from probabilistic inferences.
+- **Temporal Unfolding:** Reveals the timeline of events leading up to the answer.
+
+### 2. Explore Brain (`/explore`)
+An interactive canvas knowledge graph visualizing the company's network:
+- **Force-Directed Graph:** Visualizes connections between team members, projects, technologies, customers, and architectural decisions.
+- **Adjustable Inspector:** Drag-to-resize side panels with collapsible views.
+- **Three-Tier Entity Inspector:** Clicking any node reveals:
+  1. *Graph Relationships:* Directional arrows with confidence scores.
+  2. *Institutional Memories:* All structured memories concerning the entity.
+  3. *Temporal Timeline:* Chronological events associated with the entity.
+
+### 3. Brain Insights (`/insights`)
+Continuous proactive discovery of organizational risks and opportunities:
+- **Knowledge Concentration Risks:** Detects critical single points of failure (e.g., when 85% of payment gateway context lives in one engineer's head).
+- **Deal Churn Post-Mortems:** Synthesizes multi-source context on lost deals.
+- **Onboarding Bottlenecks:** Identifies undocumented dependencies slowing down new hires.
+- **Team Collaboration:** Workspace owners can assign teammates directly to investigate and resolve surfaced insights.
+
+### 4. Brain Actions (`/actions`)
+A closed-loop execution engine that turns knowledge into action:
+- **6 Action Workflows:** Generates Project Handovers, Meeting Briefs, Customer Reports, Onboarding Guides, Standard Operating Procedures, and Workflow Improvement Proposals.
+- **Human Approval Gate:** Proposals remain in `pending` approval status until reviewed by authorized managers.
+- **Continuous Learning Flywheel:** When an action is executed, the outcome is automatically written back into organizational memory.
+
+### 5. Teach Brain (`/teach`)
+An employee knowledge contribution workflow:
+- **Guided 3-Step Wizard:** Capture context -> Review extracted entities and relationships -> Confirm and commit.
+- **Clarifying Questions:** If input references ambiguous entities, the Brain prompts the user with clarifying questions before saving.
+- **High-Impact Routing:** Architectural or policy decisions automatically flag for peer review.
+
+### 6. Administration & Governance (`/admin`)
+The command center for organizational truth:
+- **Data Connectors Hub:** Configure and sync live credentials for Slack, GitHub, Jira, Confluence, and Google Drive.
+- **Source Library:** Upload, drag-and-drop, and inspect ingested PDF, DOCX, CSV, TXT, and Markdown files.
+- **Memory Review & Contradictions:** Review memories, dispute inaccuracies, mark superseded policies, and resolve semantic conflicts.
+- **Audit Trail:** Complete tamper-evident log of who uploaded what, synced data, altered permissions, or executed actions.
+
+---
+
+## Enterprise Security & Encryption
+
+GibCom implements defense-in-depth security principles:
+
+### 1. AES-256-GCM Secret Encryption at Rest
+Third-party API tokens (Slack bot tokens, GitHub personal access tokens, Atlassian API keys, Google Drive tokens) are never stored in plaintext. They are encrypted using **AES-256-GCM** with authenticated 128-bit authentication tags before being written to the PostgreSQL database.
+- Key Derivation: Cryptographically secure 256-bit encryption key (`ENCRYPTION_KEY`).
+- Unique IV: Every encrypted secret generates a unique 12-byte initialization vector.
+- Tamper-Proof: Decryption verifies the GCM authentication tag, preventing tampering.
+
+### 2. Role-Based Access Control (RBAC)
+Multi-tiered hierarchy:
+- `owner`: Full organization governance, workspace renaming, collaborator invites.
+- `admin`: Credential configuration, live connector management, audit log access.
+- `manager`: Memory verification, dispute handling, action proposal approval.
+- `employee`: Knowledge querying, exploration, and teaching submissions.
+
+### 3. Non-ASCII ByteString Header Isolation
+All connector clients enforce strict ASCII ByteString validation, preventing Node.js / `undici` header translation errors when tokens are handled.
+
+---
+
+## Real Third-Party Connectors (Zero Mock)
+
+GibCom communicates with live third-party platforms via official REST APIs:
+
+| Connector | Official API | What GibCom Ingests | Security |
+| :--- | :--- | :--- | :--- |
+| **GitHub** | GitHub REST API v3 | Pull request discussions, ADR commits, code review comments | AES-256-GCM Personal Access Token |
+| **Slack** | Slack Web API (`v2`) | Architecture channel messages, incident post-mortems, escalations | AES-256-GCM Bot User OAuth Token |
+| **Jira Software** | Atlassian Cloud REST API v3 | Sprint blockers, epic requirements, retrospectives via JQL | AES-256-GCM Basic Auth API Token |
+| **Confluence** | Atlassian Confluence Cloud API | Wiki spaces, technical specifications, standard operating procedures | AES-256-GCM Cloud Token, macro stripper |
+| **Google Drive** | Google Drive API v3 | Google Docs (exported to text), Google Sheets (exported to CSV) | AES-256-GCM OAuth Token / API Key |
+
+---
+
+## Webhooks & Continuous Ingestion Flywheel
+
+In addition to manual syncs, GibCom provides automated endpoints for real-time continuous ingestion:
+
+1. **GitHub Webhooks (`POST /api/webhooks/github`):**
+   - Receives `pull_request` (closed/merged) and `push` events.
+   - Automatically ingests merged pull requests and architectural commits into organizational memory.
+   - Verifies HMAC-SHA256 signatures when `GITHUB_WEBHOOK_SECRET` is configured.
+
+2. **Slack Event Subscriptions (`POST /api/webhooks/slack`):**
+   - Supports Slack's URL verification handshake (`url_verification`).
+   - Ingests new message events (`message.channels`) in real time.
+
+3. **Background Sync Runner (`POST /api/connectors/sync-all`):**
+   - Secure endpoint callable by cron jobs or background schedulers (`Authorization: Bearer CRON_SECRET`).
+   - Automatically cycles through all configured connectors and indexes new records.
+
+---
+
+## Quickstart & Deployment Guide
 
 ### Prerequisites
+- **Node.js** v18.17+ or v20+
+- **PostgreSQL** v14+ with the native `pgvector` extension enabled
+- **pnpm** or **npm**
 
-- **Node.js** (v18.17+ or v20+)
-- **PostgreSQL** (v14+ with `pgvector` extension)
-- **pnpm** (or `npm`)
+### 1. Clone & Install Dependencies
+```bash
+git clone https://github.com/your-org/gibcom.git
+cd gibcom
+npm install
+```
 
-### 1. Environment Configuration
-
-Create `.env.local` in the project root:
-
+### 2. Configure Environment Variables
+Create a `.env.local` file in the root directory:
 ```env
-# Database
-DATABASE_URL=postgresql://postgres:123456@localhost:5432/gibcom
+# Database (PostgreSQL with pgvector)
+DATABASE_URL=postgresql://postgres:password@localhost:5432/gibcom
 
-# NextAuth
-NEXTAUTH_SECRET=123456
+# NextAuth Session Security
+NEXTAUTH_SECRET=generate-a-strong-secret-key-here
 NEXTAUTH_URL=http://localhost:3000
 
-# Meta AI (Optional - platform falls back to grounded heuristic reasoning if not configured)
-META_AI_API_KEY=your-meta-ai-api-key
-META_AI_BASE_URL=https://api.meta.ai/v1
-META_AI_MODEL_ID=meta-llama/Llama-3.3-70B-Instruct
+# Enterprise Encryption at Rest (32-byte hex string)
+ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 
-# Upload Storage
+# Meta AI Model Integration
+META_AI_API_KEY=your-meta-ai-key
+META_AI_BASE_URL=https://api.meta.ai/v1
+META_AI_MODEL_ID=muse-spark-1.3
+
+# Automated Background Sync & Webhooks
+CRON_SECRET=your-secure-cron-secret
+GITHUB_WEBHOOK_SECRET=your-github-webhook-secret
+SLACK_SIGNING_SECRET=your-slack-signing-secret
+
+# Document File Storage
 UPLOAD_DIR=./uploads
 MAX_FILE_SIZE_MB=50
 ```
 
-### 2. Initialize Database & Run Seed
+### 3. Initialize Database & Seed Synthetic Enterprise Data
+```bash
+# Push schema migrations
+npx drizzle-kit push:pg
 
-```powershell
-# 1. Run PostgreSQL schema migration with pgvector
-$env:PGPASSWORD='your_password'; psql -U postgres -d your_db -f drizzle/0001_init.sql
-
-# 2. Seed Acme Corp synthetic organization
+# Seed realistic company data (Acme Corp with 8 employees, decisions, projects, and relationships)
 npx tsx scripts/seed.ts
 ```
 
-### 3. Run Development Server or Production Build
-
-```powershell
-# Start dev server
+### 4. Run Development Server
+```bash
 npm run dev
-
-# Or test optimized production build
-npm run build
-npm start
 ```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-Visit [http://localhost:3000](http://localhost:3000) and sign in.
-
----
-
-## 4. Demo Walkthrough & Seeded Credentials
-
-All 8 seeded employees share the password: **`password123`**
-
-| User                    | Role       | Department               | Specialization                                          |
-| :---------------------- | :--------- | :----------------------- | :------------------------------------------------------ |
-| **sarah@acmecorp.com**  | `owner`    | Engineering (CTO)        | Architecture, Distributed Systems, PostgreSQL decisions |
-| **marcus@acmecorp.com** | `admin`    | Engineering (VP)         | Team delivery, Agile, Project Atlas                     |
-| **elena@acmecorp.com**  | `manager`  | Sales (Head of Sales)    | Enterprise accounts, ABC Technologies deal lead         |
-| **david@acmecorp.com**  | `employee` | Engineering (Sr Backend) | **Sole maintainer of Billing Reconciliation**           |
-| **james@acmecorp.com**  | `manager`  | Customer Success (Head)  | Customer Onboarding (5-stage process), GlobalRetail     |
-| **priya@acmecorp.com**  | `employee` | Product (PM)             | Merchant Dashboard v2, Mobile SDK                       |
-| **lisa@acmecorp.com**   | `employee` | Engineering (Frontend)   | React, Merchant Dashboard v2 UI                         |
-| **alex@acmecorp.com**   | `employee` | Engineering (DevOps)     | Kubernetes infrastructure, API Gateway                  |
+**Default Demo Credentials:**
+- Owner: `sarah@acmecorp.com` / `password123`
+- Admin: `marcus@acmecorp.com` / `password123`
+- Manager: `elena@acmecorp.com` / `password123`
+- Employee: `david@acmecorp.com` / `password123`
 
 ---
 
-## 5. Verification of the 6 Core Demo Questions
+## Verification & Testing
 
-Try these exact questions in **Ask Brain** (`/ask`):
+GibCom includes an end-to-end integration and unit test suite verifying data integrity, retrieval accuracy, connector authentication, encryption, and governance workflows:
 
-### 1. "Why did we lose ABC Technologies?"
-
-- **Answer:** Detailed post-mortem explaining the **\$450K ACV** loss. Shows that during the Q1–Q2 2026 evaluation, ABC Technologies required real-time webhook notifications for payment confirmation. Acme's API Gateway lacked webhooks, and the offered 8-week custom integration timeline was too slow (ABC required 3 weeks). ABC signed with CompetitorX. Shows that API Gateway completed in June 2026 with native webhook support, resolving the gap.
-- **Evidence:** Cites _Q2 2026 Sales Pipeline Review_.
-
-### 2. "Who knows the most about our payment infrastructure?"
-
-- **Answer:** Identifies **David Kim** as the primary maintainer and sole expert of the legacy payment reconciliation system built in 2024. Also highlights **Sarah Chen (CTO)** as leading overall payment architecture and **Project Atlas**.
-- **Evidence:** Cites _Engineering Team Structure and Expertise Map_.
-
-### 3. "What decisions shaped our current architecture?"
-
-- **Answer:** Explains Sarah Chen's decision on Jan 15, 2026 to choose **PostgreSQL over MongoDB** for Project Atlas due to ACID transaction requirements in financial payments and team database expertise. Explains API Gateway unification and real-time webhook addition.
-- **Evidence:** Cites _Project Atlas Architecture Decision Record_.
-
-### 4. "What is our current customer onboarding process?"
-
-- **Answer:** Explains James Wright's 5-stage, 6-week enterprise customer onboarding process (Initial Call, Requirements Gathering, Setup, Data Migration, Go-Live). Highlights that **Stage 4 (Data Migration)** is the primary operational bottleneck.
-- **Evidence:** Cites _Customer Onboarding Process Document_.
-
-### 5. "What happened with GlobalRetail Inc's contract?"
-
-- **Answer:** Details the \$320,000 enterprise contract signed in September 2025, renewed in July 2026 with a **15% price increase** (\$368K). Notes that onboarding took 9 weeks due to legacy POS data mapping and that GlobalRetail specifically praised David Kim's technical support.
-- **Evidence:** Cites _GlobalRetail Inc Partnership Notes_.
-
-### 6. "What are our biggest knowledge concentration risks?"
-
-- **Answer:** Identifies **David Kim** as a critical single-person dependency for payment reconciliation, Alex Novak for Kubernetes cluster management, and onboarding Stage 4 data migration bottlenecks.
-- **Evidence:** Synthesizes findings from _Engineering Team Structure_ and _Brain Insights_.
-
----
-
-## 6. Test Suite & Validation
-
-The project includes unit and integration tests covering contracts, embeddings, text chunking, and full intelligence query pipelines:
-
-```powershell
+```bash
+# Run all unit and integration test suites
 npx vitest run
+
+# Run production build validation
+npm run build
 ```
 
-**Results:**
-
-- `tests/unit/contracts.test.ts` (6 tests) — Role hierarchy, Unicode name normalization, content hashing, valid-time temporal windows, memory schema validation, self-relationship rejection.
-- `tests/unit/retrieval.test.ts` (2 tests) — 1536-dimensional deterministic embedding generation and vector magnitude normalization.
-- `tests/unit/processor.test.ts` (2 tests) — Document chunking with boundary detection and section header retention.
-- `tests/integration/intelligence.test.ts` (3 tests) — Database-connected query pipeline answering ABC Technologies loss, David Kim expertise identification, and hybrid graph traversal.
-- `tests/integration/demo-questions.test.ts` (6 tests) — Full end-to-end verification of all 6 canonical demo questions against live PostgreSQL.
-- `tests/integration/members-and-insights.test.ts` (3 tests) — Member listing, owner/admin member invitations, and insight assignment & unassignment.
-- `tests/integration/actions-execution.test.ts` (1 test) — Action proposal approval and execution feeding back into organizational memory.
-- `tests/integration/teach-clarifications.test.ts` (2 tests) — Interactive ambiguity checks, clarifying questions, and high-impact memory routing.
-- `tests/integration/connectors-and-governance.test.ts` (2 tests) — External stream syncing and memory dispute/verification governance.
-- `tests/integration/real-connectors.test.ts` (4 tests) — Real third-party API clients (Slack, GitHub, Jira), credential persistence, token masking, and live connection testing.
-
-**Summary:** 31 passed across 10 test suites (100% pass rate).
+### Test Suite Coverage
+- `tests/unit/contracts.test.ts`: Data model contracts and schema validation.
+- `tests/unit/processor.test.ts`: Multi-format document parser and text chunker.
+- `tests/unit/retrieval.test.ts`: Hybrid retrieval score calculations.
+- `tests/integration/real-connectors.test.ts`: Live API validation, token masking, and ByteString guards.
+- `tests/integration/audit-and-contradictions.test.ts`: Contradiction detection and audit log logging.
+- `tests/integration/actions-execution.test.ts`: Closed-loop workflow execution into organizational memory.
+- `tests/integration/members-and-insights.test.ts`: Member collaboration and insight delegation.
+- `tests/integration/intelligence.test.ts`: Context reconstruction and causal reasoning.
+- `tests/integration/demo-questions.test.ts`: Validation of the canonical 6 organizational questions.
 
 ---
 
-## 7. Production Real Connectors & Live Stream Ingestion
+## License
 
-### Real Official API Integrations
-- **Slack Web API (`src/lib/connectors/slack.ts`):** Connects to `https://slack.com/api` via Bot User OAuth Token (`xoxb-...`). Performs real `auth.test`, fetches accessible public/private channels via `conversations.list`, resolves user IDs via `users.list`, and fetches real message threads via `conversations.history`.
-- **GitHub REST API (`src/lib/connectors/github.ts`):** Connects to `https://api.github.com` via Personal Access Token (`ghp_...`). Verifies repository access, pulls real pull requests (`/repos/{owner}/{repo}/pulls`), reviews, descriptions, and commit history (`/repos/{owner}/{repo}/commits`).
-- **Atlassian Jira Cloud REST API (`src/lib/connectors/jira.ts`):** Connects to `https://{domain}/rest/api/3` via Basic Auth (email + Atlassian API Token). Tests identity via `/rest/api/3/myself`, parses Atlassian Document Format (ADF) ticket trees, and fetches real project issues via `/rest/api/3/search` with custom JQL queries.
-- **Authentic Brand Logos (`src/components/connector-icons.tsx`):** Official vector marks for Slack (4-color octothorpe), GitHub (Octocat), Jira (Atlassian dual-chevron), Confluence, and Google Drive.
-- **Live Sync & Ingestion Engine (`src/app/api/connectors/sync/route.ts`):** Pulls live content from the target external service, runs chunking through `DocumentProcessor`, embeds into `pgvector` with 1536-dimensional vectors, extracts entities into the knowledge graph, and creates verified memories.
-- **Secure Token Masking (`src/app/api/connectors/route.ts`):** Client-facing API responses mask sensitive credentials (e.g. `xoxb-••••••••`, `ghp_••••••••`) while storing authorized keys in organizational settings.
-
-### Action Execution Feedback Loop
-- **Execute into Memory (`PATCH /api/actions/[id]`):** Once an action proposal (Project Handover, SOP, Customer Report, Onboarding Guide) is approved and executed, the platform feeds outcomes directly into `memories` and `events`. Future queries immediately ground in the executed work.
-
-### Interactive "Teach Brain" Clarifying Questions
-- **Ambiguity Detection & Clarifying Prompts (`/teach`):** When employees submit knowledge, the Brain detects ambiguous names or missing project contexts and asks targeted questions (e.g. *"Did you mean Sarah Chen (CTO)?"*).
-- **High-Impact Routing:** Submissions touching architecture, security, or enterprise contracts are flagged with a prominent advisory and routed for manager review.
-
-### Data Connectors Hub & Human Governance
-- **Streaming Connectors (`/admin?tab=connectors`):** Instant synchronization from Slack channels (`#architecture-decisions`), GitHub pull requests (Real-time webhooks PR #184), Jira sprints (Sprint 44 retro), and executive meeting transcripts.
-- **Memory Governance (`/admin?tab=memories`):** Filter by verification state (`unverified`, `verified`, `disputed`, `superseded`) and record dispute rationale with audit trails.
-
----
-
-## 8. Organization Collaboration & Adjustable Workspace UI
-
-### Member Collaboration & Assignment
-
-- **Invite / Add Members (`POST /api/members`):** Organization Owners and Admins can invite or add members by specifying their name, email, role (`admin`, `manager`, `employee`), department, and technical expertise. Automatically registers them into the organizational graph as `person` entities.
-- **Assign Team Members to Insights (`POST /api/insights/assign`):** Key team members (e.g. David Kim, Sarah Chen) can be assigned to proactive organizational discoveries (such as single-person dependencies or customer deal risks) with actionable notes and timestamps, persisted directly in organizational settings.
-- **Inspect Collaborators Modal:** View the active roster, their roles, departments, and areas of expertise directly from the Insights interface.
-
-### Adjustable Panels & Ergonomics
-
-- **Draggable Left Sidebar Resizer:** Drag the sidebar border smoothly from 68px (compact icon rail) up to 420px. Includes a one-click collapse toggle button and keyboard shortcut (`Ctrl+B`). State is persisted across browser reloads via `localStorage`.
-- **Draggable Right Inspector Resizer:** Expand or compact context inspectors (in `/explore` and `/insights`) between 340px and 750px width, or minimize to full-canvas view.
-- **Finished Left Navigation:** Fully interactive workspace switcher showing active organization metadata, live memory review & source library links, and real-time status badges.
+This project is licensed under the Apache 2.0 License.

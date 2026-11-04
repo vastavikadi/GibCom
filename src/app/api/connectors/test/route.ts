@@ -8,6 +8,7 @@ import { testGitHubAuth } from '@/lib/connectors/github';
 import { testJiraAuth } from '@/lib/connectors/jira';
 import { testConfluenceAuth } from '@/lib/connectors/confluence';
 import { testGoogleDriveAuth } from '@/lib/connectors/google-drive';
+import { decryptSecret } from '@/lib/security/encryption';
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,12 +31,12 @@ export async function POST(request: NextRequest) {
     const savedConnectors = (settings.connectors || {}) as Record<string, any>;
     const saved = savedConnectors[type] || {};
 
-    // Helper to resolve secret without bullet characters
+    // Helper to resolve secret without bullet characters and decrypt from storage
     const resolveSecret = (incoming?: string, fallback?: string): string => {
       if (incoming && typeof incoming === 'string' && incoming.trim() && !incoming.includes('•')) {
         return incoming.trim();
       }
-      return (fallback || '').trim();
+      return decryptSecret(fallback || '');
     };
 
     if (type === 'slack') {

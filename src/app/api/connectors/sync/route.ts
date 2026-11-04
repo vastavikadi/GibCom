@@ -24,13 +24,14 @@ import {
 import { fetchJiraIssuesAsDocument } from '@/lib/connectors/jira';
 import { fetchConfluencePagesAsDocument } from '@/lib/connectors/confluence';
 import { fetchGoogleDriveDocuments } from '@/lib/connectors/google-drive';
+import { decryptSecret } from '@/lib/security/encryption';
 
-// Helper to resolve secret value without bullet characters
+// Helper to resolve secret value without bullet characters and decrypt from storage
 function resolveSecret(val: any, fallback: any): string {
   if (typeof val === 'string' && val.trim().length > 0 && !val.includes('•') && !/^\*+$/.test(val.trim())) {
     return val.trim();
   }
-  return typeof fallback === 'string' ? fallback.trim() : '';
+  return decryptSecret(typeof fallback === 'string' ? fallback.trim() : '');
 }
 
 export async function POST(request: NextRequest) {

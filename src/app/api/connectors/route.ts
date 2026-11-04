@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { organizations } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { logAudit } from '@/lib/permissions/audit';
+import { encryptConfigSecrets, decryptSecret } from '@/lib/security/encryption';
 
 export async function GET() {
   try {
@@ -20,6 +21,9 @@ export async function GET() {
     for (const [key, cfg] of Object.entries(rawConnectors)) {
       if (!cfg) continue;
       const isConfigured = Boolean(cfg.token || cfg.botToken || cfg.apiToken || cfg.apiKey || cfg.apiKeyOrToken);
+      const rawToken = decryptSecret(cfg.token || cfg.apiKeyOrToken || cfg.apiKey);
+      const rawBotToken = decryptSecret(cfg.botToken);
+
       safeConnectors[key] = {
         ...cfg,
         isConfigured,
@@ -29,12 +33,10 @@ export async function GET() {
         apiToken: undefined,
         apiKey: undefined,
         apiKeyOrToken: undefined,
-        maskedPreview: cfg.token
-          ? `${cfg.token.slice(0, 4)}••••${cfg.token.slice(-3)}`
-          : cfg.botToken
-          ? `${cfg.botToken.slice(0, 5)}••••`
-          : cfg.apiKeyOrToken
-          ? `${cfg.apiKeyOrToken.slice(0, 4)}••••`
+        maskedPreview: rawToken
+          ? `${rawToken.slice(0, 4)}••••${rawToken.slice(-3)}`
+          : rawBotToken
+          ? `${rawBotToken.slice(0, 5)}••••`
           : isConfigured
           ? '••••••••••••'
           : undefined,
@@ -95,11 +97,14 @@ export async function POST(request: NextRequest) {
       configuredBy: user.email,
     };
 
+    // Encrypt secrets at rest using AES-256-GCM
+    const encryptedConfig = encryptConfigSecrets(updatedConfig);
+
     const newSettings = {
       ...settings,
       connectors: {
         ...existingConnectors,
-        [type]: updatedConfig,
+        [type]: encryptedConfig,
       },
     };
 
@@ -116,12 +121,12 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       action: 'connector_configured',
       resourceType: 'connector',
-      details: { type, configuredBy: user.email },
+      details: { type, configuredBy: user.email, encrypted: true },
     });
 
     return NextResponse.json({
       success: true,
-      message: `${type.toUpperCase()} configuration saved successfully.`,
+      message: `${type.toUpperCase()} configuration saved securely (AES-256-GCM encrypted).`,
     });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Failed to save connector';
